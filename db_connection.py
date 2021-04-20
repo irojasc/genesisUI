@@ -18,5 +18,5 @@ try:
 	mydb.close()
 except:
 	print("An exception ocurred")
-	cursor.close(
+	cursor.close()
 	mydb.close()
