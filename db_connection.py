@@ -1,5 +1,6 @@
 import mysql.connector
 
+
 mydb = mysql.connector.connect(host = "mysql-28407-0.cloudclusters.net", user="admin02", passwd="alayza2213", port="28416")
 cursor = mydb.cursor()
 
