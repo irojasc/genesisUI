@@ -6,7 +6,7 @@ class user:
 		self.level = level
 
 class almacen:
-	def __init__(self, id, name,ip)
+	def __init__(self, id, name,ip):
 		self.id = id
 		self.name = name
 		self.ip = ip
@@ -50,14 +50,16 @@ class movement_detail:
 		self.cond = cond
 
 class daily_sale:
-	def __init__(self, id, books_IDs = [] , date, total):
+	def __init__(self, id, date, books_IDs = [] , total_ = 0):
 		self.id = id
-		self.books_IDs =books_IDs
+		self.books_IDs = books_IDs
 		self.date = date
-		self.total = total
+		self.total_ = total_
 
 class main_stock:
-	def __init__(self,)
+	def __init__(self, book, almacen_quantity = []):
+		self.book = book
+		self.almacen_quantity = almacen_quantity
 
 
 
