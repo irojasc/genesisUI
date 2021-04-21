@@ -5,13 +5,6 @@ class user:
 		self.passwd = passwd
 		self.level = level
 
-class almacen:
-	def __init__(self, id, name,ip):
-		self.id = id
-		self.name = name
-		self.ip = ip
-
-
 class libro:
 	def __init__(self, cod, isbn, name, autor, editorial, supplierID, genderID, Pc, Pv):
 		self.cod = cod
@@ -28,6 +21,7 @@ class supplier:
 	def __init__(self, id, name, admin, phone, direction, mail):
 		self.id = id
 		self.name = name
+		self.register = register
 		self.admin = admin
 		self.phone = phone
 		self.direction = direction
