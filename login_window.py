@@ -10,6 +10,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from gestor import users_gestor
 from datetime import datetime
+from ware_dialog import Ui_Dialog
 import threading
 import time
 
@@ -18,6 +19,14 @@ enable_datetime = True
 
 
 class Ui_MainWindow(object):
+
+    def open_wareWindow(self, event):
+        self.dialog = QtWidgets.QDialog()
+        self.ui_dialog = Ui_Dialog()
+        self.ui_dialog.setupUi(self.dialog)
+        #self.dialog.show()
+        self.dialog.exec_()
+
     def update_datetime(self):
         while(enable_datetime):
             self.date_label.setText(datetime.now().strftime("%H:%M %d/%m/%Y"))
@@ -136,12 +145,17 @@ class Ui_MainWindow(object):
         self.date_label.setFont(font)
         self.date_label.setStyleSheet("background-color: rgb(50, 50, 50);")
         self.date_label.setObjectName("date_label")
+        # -----------  warelabel cofiguration  -----------
+        
         self.ware_label = QtWidgets.QLabel(self.frame)
         self.ware_label.setGeometry(QtCore.QRect(30, 15, 72, 72))
         self.ware_label.setText("")
         self.ware_label.setPixmap(QtGui.QPixmap("../UI/imgs/warehouse_icon.png"))
         self.ware_label.setScaledContents(True)
         self.ware_label.setObjectName("ware_label")
+        self.ware_label.mousePressEvent = self.open_wareWindow
+
+
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
         self.label_3.setGeometry(QtCore.QRect(0, 737, 1280, 287))
         self.label_3.setText("")
