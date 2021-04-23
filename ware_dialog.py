@@ -12,9 +12,29 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_Dialog(object):
+    def loadData(self):
+        almacen = [{"cod" : "GN_10000","isbn" : "9788478086085","nombre":"LOS SECRETOS DE LA MENTE MILLONARIA","autor":"T.HARV EKER","editorial":"SIRIO","genero":"CRECIMIENTO PERSONAL","cantidad[STC]":20,"cantidad[STGO]":20},
+        {"cod" : "GN_1509","isbn" : "9788497772303","nombre":"EL CABALLERO DE LA ARMADURA OXIDADA","autor":"ROBERT FISHER","editorial":"OBELISCO","genero":"NOVELA","cantidad[STC]":1,"cantidad[STGO]":0}]
+        row = 0
+        self.ware_table.setRowCount(len(almacen))
+        for libro in almacen:
+            self.ware_table.setItem(row, 0, QtWidgets.QTableWidgetItem(libro["cod"]))
+            self.ware_table.setItem(row, 1, QtWidgets.QTableWidgetItem(libro["isbn"]))
+            self.ware_table.setItem(row, 2, QtWidgets.QTableWidgetItem(libro["nombre"]))
+            self.ware_table.setItem(row, 3, QtWidgets.QTableWidgetItem(libro["autor"]))
+            self.ware_table.setItem(row, 4, QtWidgets.QTableWidgetItem(libro["editorial"]))
+            self.ware_table.setItem(row, 5, QtWidgets.QTableWidgetItem(libro["genero"]))
+            self.ware_table.setItem(row, 6, QtWidgets.QTableWidgetItem(str(libro["cantidad[STC]"])))
+            self.ware_table.setItem(row, 7, QtWidgets.QTableWidgetItem(str(libro["cantidad[STGO]"])))
+            row =+ 1
+
+    
+
+
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(1024, 768)
+        Dialog.setFixedSize(1024, 768)
         self.top_frame = QtWidgets.QFrame(Dialog)
         self.top_frame.setGeometry(QtCore.QRect(0, 0, 1024, 100))
         self.top_frame.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.298507 rgba(83, 97, 142, 255), stop:1 rgba(97, 69, 128, 255));")
@@ -142,6 +162,9 @@ class Ui_Dialog(object):
         self.btnBuscar.setFont(font)
         self.btnBuscar.setStyleSheet("background-color: rgb(240, 240, 240);")
         self.btnBuscar.setObjectName("btnBuscar")
+
+        # -----------  ware_table configuration  -----------
+        
         self.ware_table = QtWidgets.QTableWidget(Dialog)
         self.ware_table.setGeometry(QtCore.QRect(0, 130, 1024, 450))
         self.ware_table.setObjectName("ware_table")
@@ -163,6 +186,20 @@ class Ui_Dialog(object):
         self.ware_table.setHorizontalHeaderItem(6, item)
         item = QtWidgets.QTableWidgetItem()
         self.ware_table.setHorizontalHeaderItem(7, item)
+        self.ware_table.setColumnWidth(0,80)
+        self.ware_table.setColumnWidth(1,120)
+        self.ware_table.setColumnWidth(2,300)
+        self.ware_table.setColumnWidth(3,120)
+        self.ware_table.setColumnWidth(4,80)
+        self.ware_table.setColumnWidth(5,200)
+        self.ware_table.setColumnWidth(6,40)
+        self.ware_table.setColumnWidth(7,54)
+        self.ware_table.horizontalHeader().setEnabled(False)
+        self.ware_table.setSelectionBehavior(1)
+        self.ware_table.setSelectionMode(1)
+        self.ware_table.setStyleSheet("selection-background-color: rgb(0, 120, 255);selection-color: rgb(255, 255, 255);")
+        # -----------  frame configuration  -----------
+        
         self.frame = QtWidgets.QFrame(Dialog)
         self.frame.setGeometry(QtCore.QRect(0, 100, 1024, 30))
         self.frame.setStyleSheet("background-color: rgb(57, 57, 57);")
@@ -323,6 +360,8 @@ class Ui_Dialog(object):
         self.lbltxtPrecio.setFont(font)
         self.lbltxtPrecio.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
         self.lbltxtPrecio.setObjectName("lbltxtPrecio")
+        
+        # -----------  boton vender  -----------
         self.btnVender = QtWidgets.QPushButton(self.boxPV)
         self.btnVender.setGeometry(QtCore.QRect(160, 117, 141, 41))
         font = QtGui.QFont()
@@ -333,20 +372,32 @@ class Ui_Dialog(object):
         self.btnVender.setFont(font)
         self.btnVender.setStyleSheet("background-color: rgb(240, 240, 240);")
         self.btnVender.setObjectName("btnVender")
+        self.btnVender.clicked.connect(self.printCurrent)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
+        # -----------  load_data  -----------
+        self.loadData()
+
+    def printCurrent(self):
+        temp = self.ware_table.currentRow()
+        self.ware_table.clearSelection()
+        self.ware_table.setCurrentCell(temp,0)
+        print(temp)
+
+
+
+
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        Dialog.setWindowTitle(_translate("Dialog", "Genesis - [Museo del libro]"))
         self.search_box.setTitle(_translate("Dialog", "Cuadro de busqueda"))
         self.cmbSearch.setItemText(1, _translate("Dialog", "cod"))
         self.cmbSearch.setItemText(2, _translate("Dialog", "isbn"))
         self.cmbSearch.setItemText(3, _translate("Dialog", "nombre"))
         self.cmbSearch.setItemText(4, _translate("Dialog", "autor"))
         self.cmbSearch.setItemText(5, _translate("Dialog", "editorial"))
-        self.cmbSearch.setItemText(6, _translate("Dialog", "genero"))
         self.btnBuscar.setText(_translate("Dialog", "Buscar"))
         item = self.ware_table.horizontalHeaderItem(0)
         item.setText(_translate("Dialog", "cod"))
@@ -361,9 +412,11 @@ class Ui_Dialog(object):
         item = self.ware_table.horizontalHeaderItem(5)
         item.setText(_translate("Dialog", "genero"))
         item = self.ware_table.horizontalHeaderItem(6)
-        item.setText(_translate("Dialog", "Cantidad [STC]"))
+        item.setText(_translate("Dialog", "[STC]"))
         item = self.ware_table.horizontalHeaderItem(7)
-        item.setText(_translate("Dialog", "cantidad [STGO]"))
+        item.setText(_translate("Dialog", "[STGO]"))
+
+
         self.boxPV.setTitle(_translate("Dialog", "Cuadro de venta"))
         self.lblPV.setText(_translate("Dialog", "P.Venta:"))
         self.lbltxtPrecio.setText(_translate("Dialog", "S/.50"))
