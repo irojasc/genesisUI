@@ -9,24 +9,55 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from gestor import ware_gestor
+import time
 
 
 class Ui_Dialog(object):
+
     def loadData(self):
-        almacen = [{"cod" : "GN_10000","isbn" : "9788478086085","nombre":"LOS SECRETOS DE LA MENTE MILLONARIA","autor":"T.HARV EKER","editorial":"SIRIO","genero":"CRECIMIENTO PERSONAL","cantidad[STC]":20,"cantidad[STGO]":20},
-        {"cod" : "GN_1509","isbn" : "9788497772303","nombre":"EL CABALLERO DE LA ARMADURA OXIDADA","autor":"ROBERT FISHER","editorial":"OBELISCO","genero":"NOVELA","cantidad[STC]":1,"cantidad[STGO]":0}]
+
+        flag = QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled
+        self.ware.load_mainlist()
+
+        # -----------  esta parte para encontrar los codigos sin objLibro  -----------
+        count = 0
+        for ware_book in self.ware.ware_list:
+            if(type(ware_book.book) == str):
+                count =+ 1
+
+        # -----------  esta parte para llenar la tabla  -----------
+        len_list = len(self.ware.ware_list) - count
         row = 0
-        self.ware_table.setRowCount(len(almacen))
-        for libro in almacen:
-            self.ware_table.setItem(row, 0, QtWidgets.QTableWidgetItem(libro["cod"]))
-            self.ware_table.setItem(row, 1, QtWidgets.QTableWidgetItem(libro["isbn"]))
-            self.ware_table.setItem(row, 2, QtWidgets.QTableWidgetItem(libro["nombre"]))
-            self.ware_table.setItem(row, 3, QtWidgets.QTableWidgetItem(libro["autor"]))
-            self.ware_table.setItem(row, 4, QtWidgets.QTableWidgetItem(libro["editorial"]))
-            self.ware_table.setItem(row, 5, QtWidgets.QTableWidgetItem(libro["genero"]))
-            self.ware_table.setItem(row, 6, QtWidgets.QTableWidgetItem(str(libro["cantidad[STC]"])))
-            self.ware_table.setItem(row, 7, QtWidgets.QTableWidgetItem(str(libro["cantidad[STGO]"])))
-            row =+ 1
+        self.ware_table.setRowCount(len_list)
+        for ware_lib in self.ware.ware_list:
+            if(type(ware_lib.book) != str):
+                item = QtWidgets.QTableWidgetItem(ware_lib.book.cod)
+                item.setFlags(flag)
+                self.ware_table.setItem(row, 0, item)
+                item = QtWidgets.QTableWidgetItem(ware_lib.book.isbn)
+                item.setFlags(flag)
+                self.ware_table.setItem(row, 1, item)
+                item = QtWidgets.QTableWidgetItem(ware_lib.book.name)
+                item.setFlags(flag)
+                self.ware_table.setItem(row, 2, item)
+                item = QtWidgets.QTableWidgetItem(ware_lib.book.autor)
+                item.setFlags(flag)
+                self.ware_table.setItem(row, 3, item)
+                item = QtWidgets.QTableWidgetItem(ware_lib.book.editorial)
+                item.setFlags(flag)
+                self.ware_table.setItem(row, 4, item)
+                item = QtWidgets.QTableWidgetItem(ware_lib.almacen_ubicacion[1])
+                item.setFlags(flag)
+                self.ware_table.setItem(row, 5, item)
+                item = QtWidgets.QTableWidgetItem(str(ware_lib.almacen_quantity[0]))
+                item.setFlags(flag)
+                self.ware_table.setItem(row, 6, item)
+                item = QtWidgets.QTableWidgetItem(str(ware_lib.almacen_quantity[1]))
+                item.setFlags(flag)
+                self.ware_table.setItem(row, 7, item)
+                row += 1
+
 
     
 
@@ -41,6 +72,9 @@ class Ui_Dialog(object):
         self.top_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.top_frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.top_frame.setObjectName("top_frame")
+
+        # -----------  search box configuration  -----------
+        
         self.search_box = QtWidgets.QGroupBox(self.top_frame)
         self.search_box.setGeometry(QtCore.QRect(20, 10, 621, 81))
         palette = QtGui.QPalette()
@@ -124,6 +158,8 @@ class Ui_Dialog(object):
         font.setWeight(75)
         self.search_box.setFont(font)
         self.search_box.setObjectName("search_box")
+
+        # -----------  txtSearch configuration  -----------
         self.txtSearch = QtWidgets.QLineEdit(self.search_box)
         self.txtSearch.setGeometry(QtCore.QRect(130, 35, 351, 31))
         font = QtGui.QFont()
@@ -134,6 +170,8 @@ class Ui_Dialog(object):
         self.txtSearch.setFont(font)
         self.txtSearch.setStyleSheet("background-color: rgb(248, 248, 248);")
         self.txtSearch.setObjectName("txtSearch")
+
+        # -----------  cmbSearch Configuration  -----------
         self.cmbSearch = QtWidgets.QComboBox(self.search_box)
         self.cmbSearch.setGeometry(QtCore.QRect(20, 35, 101, 31))
         font = QtGui.QFont()
@@ -152,6 +190,8 @@ class Ui_Dialog(object):
         self.cmbSearch.addItem("")
         self.cmbSearch.addItem("")
         self.cmbSearch.addItem("")
+        
+        # -----------  btnBuscar configuration  -----------       
         self.btnBuscar = QtWidgets.QPushButton(self.search_box)
         self.btnBuscar.setGeometry(QtCore.QRect(492, 35, 111, 31))
         font = QtGui.QFont()
@@ -169,7 +209,7 @@ class Ui_Dialog(object):
         self.ware_table.setGeometry(QtCore.QRect(0, 130, 1024, 450))
         self.ware_table.setObjectName("ware_table")
         self.ware_table.setColumnCount(8)
-        self.ware_table.setRowCount(0)
+        #self.ware_table.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.ware_table.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
@@ -186,20 +226,21 @@ class Ui_Dialog(object):
         self.ware_table.setHorizontalHeaderItem(6, item)
         item = QtWidgets.QTableWidgetItem()
         self.ware_table.setHorizontalHeaderItem(7, item)
+
         self.ware_table.setColumnWidth(0,80)
         self.ware_table.setColumnWidth(1,120)
-        self.ware_table.setColumnWidth(2,300)
+        self.ware_table.setColumnWidth(2,308)
         self.ware_table.setColumnWidth(3,120)
-        self.ware_table.setColumnWidth(4,80)
-        self.ware_table.setColumnWidth(5,200)
-        self.ware_table.setColumnWidth(6,40)
-        self.ware_table.setColumnWidth(7,54)
+        self.ware_table.setColumnWidth(4,110)
+        self.ware_table.setColumnWidth(5,108)
+        self.ware_table.setColumnWidth(6,38)
+        self.ware_table.setColumnWidth(7,58)
         self.ware_table.horizontalHeader().setEnabled(False)
         self.ware_table.setSelectionBehavior(1)
         self.ware_table.setSelectionMode(1)
         self.ware_table.setStyleSheet("selection-background-color: rgb(0, 120, 255);selection-color: rgb(255, 255, 255);")
+       
         # -----------  frame configuration  -----------
-        
         self.frame = QtWidgets.QFrame(Dialog)
         self.frame.setGeometry(QtCore.QRect(0, 100, 1024, 30))
         self.frame.setStyleSheet("background-color: rgb(57, 57, 57);")
@@ -295,6 +336,8 @@ class Ui_Dialog(object):
         font.setWeight(75)
         self.boxPV.setFont(font)
         self.boxPV.setObjectName("boxPV")
+
+        # -----------  lblPV configuration  -----------
         self.lblPV = QtWidgets.QLabel(self.boxPV)
         self.lblPV.setGeometry(QtCore.QRect(160, 20, 151, 41))
         font = QtGui.QFont()
@@ -305,6 +348,8 @@ class Ui_Dialog(object):
         self.lblPV.setFont(font)
         self.lblPV.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
         self.lblPV.setObjectName("lblPV")
+
+        # -----------  lblImg configuration  -----------
         self.lblImg = QtWidgets.QLabel(self.boxPV)
         self.lblImg.setGeometry(QtCore.QRect(10, 30, 131, 131))
         self.lblImg.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
@@ -312,6 +357,8 @@ class Ui_Dialog(object):
         self.lblImg.setPixmap(QtGui.QPixmap("../UI/imgs/books_imgs/GN_3.jpg"))
         self.lblImg.setScaledContents(True)
         self.lblImg.setObjectName("lblImg")
+
+        # -----------  lbltxtPrecio configuration  -----------
         self.lbltxtPrecio = QtWidgets.QLabel(self.boxPV)
         self.lbltxtPrecio.setGeometry(QtCore.QRect(160, 60, 151, 41))
         palette = QtGui.QPalette()
@@ -377,8 +424,15 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
+        # -----------  initialize objects  -----------
+        self.ware = ware_gestor()
+        
+
         # -----------  load_data  -----------
         self.loadData()
+        self.cmbSearch.setEnabled(False)
+        self.txtSearch.setEnabled(False)
+        self.btnBuscar.setEnabled(False)
 
     def printCurrent(self):
         temp = self.ware_table.currentRow()
@@ -410,11 +464,11 @@ class Ui_Dialog(object):
         item = self.ware_table.horizontalHeaderItem(4)
         item.setText(_translate("Dialog", "editorial"))
         item = self.ware_table.horizontalHeaderItem(5)
-        item.setText(_translate("Dialog", "genero"))
+        item.setText(_translate("Dialog", "ubic. [STNG]"))
         item = self.ware_table.horizontalHeaderItem(6)
         item.setText(_translate("Dialog", "[STC]"))
         item = self.ware_table.horizontalHeaderItem(7)
-        item.setText(_translate("Dialog", "[STGO]"))
+        item.setText(_translate("Dialog", "[SNTG]"))
 
 
         self.boxPV.setTitle(_translate("Dialog", "Cuadro de venta"))

@@ -6,7 +6,7 @@ class user:
 		self.level = level
 
 class libro:
-	def __init__(self, cod, isbn, name, autor, editorial, supplierID, genderID, Pc, Pv):
+	def __init__(self, cod, isbn, name, autor, editorial, supplierID, genderID, Pc, Pv, dsct =  0):
 		self.cod = cod
 		self.isbn = isbn
 		self.name = name
@@ -16,6 +16,7 @@ class libro:
 		self.genderID = genderID
 		self.Pc = Pc
 		self.Pv = Pv
+		self.dsct = dsct
 
 class supplier:
 	def __init__(self, id, name, admin, phone, direction, mail):
@@ -50,10 +51,12 @@ class daily_sale:
 		self.date = date
 		self.total_ = total_
 
-class main_stock:
-	def __init__(self, book, almacen_quantity = []):
+class ware_book:
+	def __init__(self, book, almacen_quantity = [], almacen_ubicacion = [], state = False):
 		self.book = book
 		self.almacen_quantity = almacen_quantity
+		self.almacen_ubicacion = almacen_ubicacion
+		self.state = state
 
 
 
