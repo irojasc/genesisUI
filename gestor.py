@@ -41,6 +41,8 @@ class users_gestor:
 				return True, user(i.id ,i.user)
 		return False, user()
 
+
+
 class ware_gestor:
 	
 	def connect_db(self):
@@ -64,10 +66,27 @@ class ware_gestor:
 			tup = () 
 		return tup
 
+	
+	def buscar(self, criterio, patron):
+		self.temp_list.clear()
+		if criterio == "cod":
+			for i in self.ware_list:
+				if(i.book.cod == patron):
+					self.temp_list.append(i)
+			return len(self.temp_list)		
+		elif criterio == "isbn":
+			for i in self.ware_list:
+				if(i.book.isbn == patron):
+					self.temp_list.append(i)
+			return len(self.temp_list)
+		elif criterio == "nombre":
+			return len(self.temp_list)
+		return 0
 
 
 	def load_mainlist(self):
 		bookList = []
+		wareList = []
 		self.connect_db()
 		try:
 			query = ("select * from genesisDB.books;")
@@ -86,16 +105,21 @@ class ware_gestor:
 			self.cursor.execute(query1)
 			for (id, cod_book, cant_STC, cant_SNTG, ubic_STC, ubic_STNG) in self.cursor:
 				objWare = ware_book(str(cod_book),[int(cant_STC),int(cant_SNTG)],[str(ubic_STC),str(ubic_STNG)])
-				self.ware_list.append(objWare)
+				wareList.append(objWare)
 
+			# -----------  cerrar conexion db  -----------
+			self.disconnect_db()	
+			
 			# -----------  match libro with ware  -----------
-
-			for i in range(len(self.ware_list)):
+			for i in range(len(wareList)):
 				for j in range(len(bookList)):
-					if self.ware_list[i].book == bookList[j].cod:
-						self.ware_list[i].book = bookList[j]
+					if wareList[i].book == bookList[j].cod:
+						wareList[i].book = bookList[j]
 
-			self.disconnect_db()
+			# -----------  eliminar los codigos de almacen que no tienen objeto libro  -----------
+			for i in wareList:
+				if(type(i.book) != str):
+					self.ware_list.append(i)
 		except:
 			print("No se pudo conectar a la DB")
 			self.disconnect_db()

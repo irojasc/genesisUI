@@ -9,70 +9,46 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
 from PyQt5 import QtCore, QtGui, QtWidgets
-
-
-
 from gestor import ware_gestor
 #import time
 
 
 class Ui_Dialog(QtWidgets.QDialog):
 #class Ui_Dialog(object):
-
+    # -----------  constructor  -----------
     def __init__(self, parent=None):
     #def __init__(self):
         super(Ui_Dialog, self).__init__(parent)
-        self.real_table = []
-
-    
-    def actualizar_img(self, tmp):
+        self.current_table = []
+        self.ware = ware_gestor()
         
-        print(tmp)
-        #self.ware_table.clearSelection()
-        #self.ware_table.setCurrentCell(tmp,0)
-        if (tmp + 1 <= len(self.real_table)) and (tmp >= 0):
-            self.lblImg.setPixmap(QtGui.QPixmap("../UI/imgs/books_imgs/" + self.ware_table.item(tmp,0).text() + ".jpg"))
-            self.lblImg.setScaledContents(True) 
-            self.lbltxtPrecio.setText("S/." + str(self.real_table[tmp].book.Pv))
 
-    def eventFilter(self, source, event):
-        if self.ware_table.selectedIndexes() != []:
-            if event.type() == QtCore.QEvent.MouseButtonRelease:
-                if event.button() == QtCore.Qt.LeftButton:
-                    temp = self.ware_table.currentRow()
-                    self.actualizar_img(temp)
-        return QtCore.QObject.event(source, event)
+    # -----------  condiciones iniciales al abrir ventana  -----------
+    def init_condition(self):
+        # -----------  set item conditions  -----------
+        self.cmbSearch.setEnabled(True)
+        self.txtSearch.setEnabled(True)
+        self.btnBuscar.setEnabled(True)
+        item_all = ['cod','isbn','nombre']
+        self.cmbSearch.clear()
+        self.cmbSearch.addItems(item_all)
+        self.cmbSearch.setCurrentIndex(-1)
 
-    def KeyPressed(self,event):
-        temp = self.ware_table.currentRow()
-        if event.key() == QtCore.Qt.Key_Left:
-            print('Left Key Pressed')
-        elif event.key() == QtCore.Qt.Key_Up:
-            temp -= 1
-            self.actualizar_img(temp)
-        elif event.key() == QtCore.Qt.Key_Down:
-            temp += 1
-            self.actualizar_img(temp)
-        return QtWidgets.QTableWidget.keyPressEvent(self.ware_table, event)
 
-    def loadData(self):
+    # -----------  carga tabla qtableWidget  -----------
+    def loadData(self, condition = "main"):
         flag = QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled
-        self.ware.load_mainlist()
-        
-        # -----------  esta parte para encontrar los codigos sin objLibro  -----------
-        count = 0
-        for ware_book in self.ware.ware_list:
-            if(type(ware_book.book) == str):
-                count =+ 1
 
+        if condition == "main":
+            self.real_table = self.ware.ware_list.copy()
+        elif condition == "search":
+            self.real_table = self.ware.temp_list.copy()
+        
         # -----------  esta parte para llenar la tabla  -----------
-        len_list = len(self.ware.ware_list) - count
         row = 0
-        self.ware_table.setRowCount(len_list)
-        for ware_lib in self.ware.ware_list:
-            if(type(ware_lib.book) != str):
-                self.real_table.append(ware_lib)
+        self.ware_table.setRowCount(len(self.real_table))
 
         for ware_li in self.real_table:
             item = QtWidgets.QTableWidgetItem(ware_li.book.cod)
@@ -97,7 +73,73 @@ class Ui_Dialog(QtWidgets.QDialog):
             item.setFlags(flag)
             self.ware_table.setItem(row, 6, item)
             row += 1
-        self.ware.ware_list.clear()
+    
+    def buscar(self):
+        if str(self.cmbSearch.currentText()) == "":
+            ret = QMessageBox.information(self, 'Aviso', "Ingresar criterio de busqueda")
+        else:
+            if self.txtSearch.text() == "":
+                self.loadData("main")
+                self.ware_table.setCurrentCell(0,0)
+                self.actualizar_img(0)
+
+            else:
+                if self.cmbSearch.currentText() == "cod":
+                    if self.ware.buscar("cod",self.txtSearch.text()) > 0:
+                        self.loadData("search")
+                        self.ware_table.setCurrentCell(0,0)
+                        self.actualizar_img(0)
+                    else:
+                        ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
+
+                elif self.cmbSearch.currentText() == "isbn":
+                    if self.ware.buscar("isbn",self.txtSearch.text()) > 0:
+                        self.loadData("search")
+                        self.ware_table.setCurrentCell(0,0)
+                        self.actualizar_img(0)
+                    else:
+                        ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
+
+                elif self.cmbSearch.currentText() == "nombre":
+                    if self.ware.buscar("nombre",self.txtSearch.text()) > 0:
+                        self.ware_table.setCurrentCell(0,0)
+                        self.actualizar_img(0)
+                    else:
+                        ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
+                   
+
+    def actualizar_img(self, tmp):
+        #self.ware_table.clearSelection()
+        #self.ware_table.setCurrentCell(tmp,0)
+        if (tmp + 1 <= len(self.real_table)) and (tmp >= 0):
+            self.lblImg.setPixmap(QtGui.QPixmap("../UI/imgs/books_imgs/" + self.ware_table.item(tmp,0).text() + ".jpg"))
+            self.lblImg.setScaledContents(True) 
+            self.lbltxtPrecio.setText("S/." + str(self.real_table[tmp].book.Pv))
+
+
+    # -----------  eventFilter para MouseEvent  -----------
+    def eventFilter(self, source, event):
+        if self.ware_table.selectedIndexes() != []:
+            if event.type() == QtCore.QEvent.MouseButtonRelease:
+                if event.button() == QtCore.Qt.LeftButton:
+                    temp = self.ware_table.currentRow()
+                    self.actualizar_img(temp)
+        return QtCore.QObject.event(source, event)
+
+
+    # -----------  keyPressed for QtableWidget  -----------
+    def KeyPressed(self,event):
+        if self.ware_table.selectedIndexes() != []:
+            temp = self.ware_table.currentRow()
+            if event.key() == QtCore.Qt.Key_Up:
+                temp -= 1
+                self.actualizar_img(temp)
+            elif event.key() == QtCore.Qt.Key_Down:
+                temp += 1
+                self.actualizar_img(temp)
+        return QtWidgets.QTableWidget.keyPressEvent(self.ware_table, event)
+
+    
 
       
 
@@ -217,23 +259,16 @@ class Ui_Dialog(QtWidgets.QDialog):
 
         # -----------  cmbSearch Configuration  -----------
         self.cmbSearch = QtWidgets.QComboBox(self.search_box)
-        self.cmbSearch.setGeometry(QtCore.QRect(20, 35, 101, 31))
-        font = QtGui.QFont()
+        #self.cmbSearch.setGeometry(QtCore.QRect(20, 35, 101, 31))
+        self.cmbSearch.setGeometry(20, 35, 101, 31)
+        self.cmbSearch.setStyleSheet("background-color: rgb(170, 255, 0);")
+        font = QFont()
         font.setFamily("Open Sans Semibold")
         font.setPointSize(10)
         font.setBold(True)
         font.setWeight(75)
-        self.cmbSearch.setFont(font)
-        self.cmbSearch.setStyleSheet("background-color: rgb(248, 248, 248);")
+        self.cmbSearch.setFont(font) 
         self.cmbSearch.setObjectName("cmbSearch")
-        self.cmbSearch.addItem("")
-        self.cmbSearch.setItemText(0, "")
-        self.cmbSearch.addItem("")
-        self.cmbSearch.addItem("")
-        self.cmbSearch.addItem("")
-        self.cmbSearch.addItem("")
-        self.cmbSearch.addItem("")
-        self.cmbSearch.addItem("")
         
         # -----------  btnBuscar configuration  -----------       
         self.btnBuscar = QtWidgets.QPushButton(self.search_box)
@@ -246,6 +281,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.btnBuscar.setFont(font)
         self.btnBuscar.setStyleSheet("background-color: rgb(240, 240, 240);")
         self.btnBuscar.setObjectName("btnBuscar")
+        self.btnBuscar.clicked.connect(self.buscar)
 
         # -----------  ware_table configuration  -----------
         self.ware_table = QtWidgets.QTableWidget(Dialog)
@@ -464,15 +500,13 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
-        # -----------  initialize objects  -----------
-        self.ware = ware_gestor()
-        
-
-        # -----------  load_data  -----------
+        # -----------  cargar datos en tabla  -----------
+        self.ware.load_mainlist()
         self.loadData()
-        self.cmbSearch.setEnabled(False)
-        self.txtSearch.setEnabled(False)
-        self.btnBuscar.setEnabled(False)
+        self.ware_table.setCurrentCell(0,0)
+        self.actualizar_img(0)
+
+
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -510,8 +544,9 @@ if __name__ == '__main__':
     
     app = QApplication(sys.argv)
     Dialog = QDialog()
-    ui = Ui_Dialog()
+    ui = Ui_Dialog(Dialog)
     ui.setupUi(Dialog)
+    ui.init_condition()
     Dialog.show()
     #ui.show()
     sys.exit(app.exec_())
