@@ -10,8 +10,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore, QtGui, QtWidgets
-#from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication
-#from PyQt5.QtCore import QEvent
+
 
 
 from gestor import ware_gestor
@@ -26,41 +25,36 @@ class Ui_Dialog(QtWidgets.QDialog):
         super(Ui_Dialog, self).__init__(parent)
         self.real_table = []
 
+    
+    def actualizar_img(self, tmp):
+        
+        print(tmp)
+        #self.ware_table.clearSelection()
+        #self.ware_table.setCurrentCell(tmp,0)
+        if (tmp + 1 <= len(self.real_table)) and (tmp >= 0):
+            self.lblImg.setPixmap(QtGui.QPixmap("../UI/imgs/books_imgs/" + self.ware_table.item(tmp,0).text() + ".jpg"))
+            self.lblImg.setScaledContents(True) 
+            self.lbltxtPrecio.setText("S/." + str(self.real_table[tmp].book.Pv))
+
     def eventFilter(self, source, event):
         if self.ware_table.selectedIndexes() != []:
             if event.type() == QtCore.QEvent.MouseButtonRelease:
                 if event.button() == QtCore.Qt.LeftButton:
                     temp = self.ware_table.currentRow()
-                    self.ware_table.clearSelection()
-                    self.ware_table.setCurrentCell(temp,0)
-                    self.lblImg.setPixmap(QtGui.QPixmap("../UI/imgs/books_imgs/" + self.ware_table.item(temp,0).text() + ".jpg"))
-                    self.lblImg.setScaledContents(True) 
-                    self.lbltxtPrecio.setText("S/." + str(self.real_table[temp].book.Pv))
+                    self.actualizar_img(temp)
         return QtCore.QObject.event(source, event)
 
-
-    '''def eventFilter(self, obj, event):
-        if (event.type() == QtCore.QEvent.KeyPress and obj is self):
-            key = event.key()
-
-            if key == Qt.Key_Down:
-                print("Down key")
-            elif key == Qt.Key_Up:
-                print("Up key")
-
-        return super(Ui_Dialog, self).eventFilter(obj, event)
-
-    def eventFilter(self, source, event):
-        if self.ware_table.selectedIndexes() != []:
-            if event.type() == QtCore.QEvent.MouseButtonRelease:
-                if event.button() == QtCore.Qt.LeftButton:
-                    temp = self.ware_table.currentRow()
-                    self.ware_table.clearSelection()
-                    self.ware_table.setCurrentCell(temp,0)
-                    self.lblImg.setPixmap(QtGui.QPixmap("../UI/imgs/books_imgs/" + self.ware_table.item(temp,0).text() + ".jpg"))
-                    self.lblImg.setScaledContents(True) 
-                    self.lbltxtPrecio.setText("S/." + str(self.real_table[temp].book.Pv))
-        return QtCore.QObject.event(source, event)'''
+    def KeyPressed(self,event):
+        temp = self.ware_table.currentRow()
+        if event.key() == QtCore.Qt.Key_Left:
+            print('Left Key Pressed')
+        elif event.key() == QtCore.Qt.Key_Up:
+            temp -= 1
+            self.actualizar_img(temp)
+        elif event.key() == QtCore.Qt.Key_Down:
+            temp += 1
+            self.actualizar_img(temp)
+        return QtWidgets.QTableWidget.keyPressEvent(self.ware_table, event)
 
     def loadData(self):
         flag = QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled
@@ -278,15 +272,16 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.ware_table.setColumnWidth(1,120)
         self.ware_table.setColumnWidth(2,360)
         self.ware_table.setColumnWidth(3,167)
-        self.ware_table.setColumnWidth(4,167)
-        self.ware_table.setColumnWidth(5,48)
-        self.ware_table.setColumnWidth(6,59)
+        self.ware_table.setColumnWidth(4,164)
+        self.ware_table.setColumnWidth(5,47)
+        self.ware_table.setColumnWidth(6,58)
         self.ware_table.horizontalHeader().setEnabled(False)
         self.ware_table.setSelectionBehavior(1)
         self.ware_table.setSelectionMode(1)
         self.ware_table.setStyleSheet("selection-background-color: rgb(0, 120, 255);selection-color: rgb(255, 255, 255);")
         self.ware_table.verticalHeader().hide()
         self.ware_table.viewport().installEventFilter(self)
+        self.ware_table.keyPressEvent = self.KeyPressed
        
         # -----------  frame configuration  -----------
         self.frame = QtWidgets.QFrame(Dialog)
