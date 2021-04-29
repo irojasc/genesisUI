@@ -10,6 +10,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QEvent
 from gestor import users_gestor
 from datetime import datetime
 from ware_dialog import Ui_Dialog
@@ -206,7 +207,11 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Estado"))
 
 
-class Ui_LoginWindow(object):
+class Ui_LoginWindow(QtWidgets.QMainWindow):
+
+    def __init__(self, parent=None):
+        super(Ui_LoginWindow, self).__init__(parent)
+
 
     def openMainWindow(self):
         param1, param2 = user_gest.check_login(self.lineEdit.text(),self.lineEdit_2.text()) 
@@ -218,6 +223,18 @@ class Ui_LoginWindow(object):
             self.window.show()
         else:
             self.label_message.setVisible(True)
+
+
+    # -----------  evento enter  -----------
+    def eventFilter(self, source, event):
+        if (event.type() == QEvent.KeyPress and
+            (source is self.lineEdit_2 or source is self.lineEdit)):
+            
+            if event.text() == "\r":
+                self.openMainWindow()
+            #print('key press:', (event.key(), event.text()))
+        return super(Ui_LoginWindow, self).eventFilter(source, event)
+
 
     def setupUi(self, LoginWindow):
         # -----------  fill_gestUser  -----------
@@ -268,6 +285,8 @@ class Ui_LoginWindow(object):
         self.lineEdit.setFrame(True)
         self.lineEdit.setClearButtonEnabled(True)
         self.lineEdit.setObjectName("lineEdit")
+        self.lineEdit.installEventFilter(self)
+        
 
         # ======  End of lineEdit_1  =======
         
@@ -284,6 +303,7 @@ class Ui_LoginWindow(object):
         self.lineEdit_2.setEchoMode(QtWidgets.QLineEdit.Password)
         self.lineEdit_2.setClearButtonEnabled(True)
         self.lineEdit_2.setObjectName("lineEdit_2")
+        self.lineEdit_2.installEventFilter(self)
         # ======  End of lineEdit_2  =======
         
         self.label = QtWidgets.QLabel(self.centralwidget)

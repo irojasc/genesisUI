@@ -71,7 +71,7 @@ class ware_gestor:
 		self.temp_list.clear()
 		if criterio == "cod":
 			for i in self.ware_list:
-				if(i.book.cod == patron):
+				if(i.book.cod == str.upper(patron)):
 					self.temp_list.append(i)
 			return len(self.temp_list)		
 		elif criterio == "isbn":
@@ -80,7 +80,17 @@ class ware_gestor:
 					self.temp_list.append(i)
 			return len(self.temp_list)
 		elif criterio == "nombre":
+			for i in self.ware_list:
+				if(i.book.name.find(str.upper(patron)) >= 0):
+					self.temp_list.append(i)
 			return len(self.temp_list)
+		
+		elif criterio == "autor":
+			for i in self.ware_list:
+				if(i.book.autor.find(str.upper(patron)) >= 0):
+					self.temp_list.append(i)
+			return len(self.temp_list)
+
 		return 0
 
 

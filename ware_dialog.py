@@ -9,7 +9,7 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QBrush, QColor
 from PyQt5 import QtCore, QtGui, QtWidgets
 from gestor import ware_gestor
 #import time
@@ -31,7 +31,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.cmbSearch.setEnabled(True)
         self.txtSearch.setEnabled(True)
         self.btnBuscar.setEnabled(True)
-        item_all = ['cod','isbn','nombre']
+        item_all = ['cod','isbn','nombre','autor']
         self.cmbSearch.clear()
         self.cmbSearch.addItems(item_all)
         self.cmbSearch.setCurrentIndex(-1)
@@ -102,6 +102,15 @@ class Ui_Dialog(QtWidgets.QDialog):
 
                 elif self.cmbSearch.currentText() == "nombre":
                     if self.ware.buscar("nombre",self.txtSearch.text()) > 0:
+                        self.loadData("search")
+                        self.ware_table.setCurrentCell(0,0)
+                        self.actualizar_img(0)
+                    else:
+                        ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
+
+                elif self.cmbSearch.currentText() == "autor":
+                    if self.ware.buscar("autor",self.txtSearch.text()) > 0:
+                        self.loadData("search")
                         self.ware_table.setCurrentCell(0,0)
                         self.actualizar_img(0)
                     else:
@@ -140,9 +149,6 @@ class Ui_Dialog(QtWidgets.QDialog):
         return QtWidgets.QTableWidget.keyPressEvent(self.ware_table, event)
 
     
-
-      
-
     def printCurrent(self):
         print("Hola Mundo")
 
@@ -255,6 +261,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         font.setWeight(75)
         self.txtSearch.setFont(font)
         self.txtSearch.setStyleSheet("background-color: rgb(248, 248, 248);")
+        self.txtSearch.setClearButtonEnabled(True)
         self.txtSearch.setObjectName("txtSearch")
 
         # -----------  cmbSearch Configuration  -----------
@@ -518,20 +525,42 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.cmbSearch.setItemText(4, _translate("Dialog", "autor"))
         self.cmbSearch.setItemText(5, _translate("Dialog", "editorial"))
         self.btnBuscar.setText(_translate("Dialog", "Buscar"))
+        
+
+        font = QtGui.QFont()
+        font.setFamily("Open Sans Semibold")
+        font.setPointSize(11)
+        font.setWeight(85)
+        font.setBold(True)
+
         item = self.ware_table.horizontalHeaderItem(0)
         item.setText(_translate("Dialog", "cod"))
+        item.setFont(font)
+        item.setForeground(QBrush(QColor(0,0,0)))
         item = self.ware_table.horizontalHeaderItem(1)
         item.setText(_translate("Dialog", "isbn"))
+        item.setFont(font)
+        item.setForeground(QBrush(QColor(0,0,0)))
         item = self.ware_table.horizontalHeaderItem(2)
         item.setText(_translate("Dialog", "nombre"))
+        item.setFont(font)
+        item.setForeground(QBrush(QColor(0,0,0)))
         item = self.ware_table.horizontalHeaderItem(3)
         item.setText(_translate("Dialog", "autor"))
+        item.setFont(font)
+        item.setForeground(QBrush(QColor(0,0,0)))
         item = self.ware_table.horizontalHeaderItem(4)
         item.setText(_translate("Dialog", "editorial"))
+        item.setFont(font)
+        item.setForeground(QBrush(QColor(0,0,0)))
         item = self.ware_table.horizontalHeaderItem(5)
         item.setText(_translate("Dialog", "[STC]"))
+        item.setFont(font)
+        item.setForeground(QBrush(QColor(0,0,0)))
         item = self.ware_table.horizontalHeaderItem(6)
         item.setText(_translate("Dialog", "[SNTG]"))
+        item.setFont(font)
+        item.setForeground(QBrush(QColor(0,0,0)))
 
 
         self.boxPV.setTitle(_translate("Dialog", "Cuadro de venta"))
