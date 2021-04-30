@@ -97,6 +97,7 @@ class ware_gestor:
 	def load_mainlist(self):
 		bookList = []
 		wareList = []
+		self.ware_list.clear()
 		self.connect_db()
 		try:
 			query = ("select * from genesisDB.books;")
