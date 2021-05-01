@@ -25,14 +25,13 @@ class Ui_MainWindow(object):
 
     def __init__(self):
         self.dialog = QDialog()
-        self.ui_dialog = Ui_Dialog()
-        self.ui_dialog.setupUi(self.dialog)
+        self.ui_dialog = Ui_Dialog(self.dialog)
         self.ui_dialog.init_condition()
 
 
     def open_wareWindow(self, event):
         self.ui_dialog.init_condition()
-        self.dialog.exec_()
+        self.ui_dialog.show_window()
 
 
     def update_datetime(self):

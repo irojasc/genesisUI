@@ -9,18 +9,54 @@
 
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QBrush, QColor
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
+from PyQt5.QtCore import Qt, QThread, QObject, pyqtSignal
+from PyQt5.QtWidgets import *
+import time
+import copy
+
+
+class MyThread_(QThread):
+    # Create a counter thread
+    change_value = pyqtSignal()
+    #finished = pyqtSignal(str)
+    myValue = True
+    def run(self):
+        while self.myValue:
+            self.change_value.emit()
+            time.sleep(0.5)
 
 
 class Ui_inoutDialog(QtWidgets.QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super(Ui_inoutDialog, self).__init__(parent)
+        self.main_table = []
+        self.ware_house = ""
+        self.button_condition = "cancelar"
         self.setupUi()
         self.init_condition()
+        self.thread_ = MyThread_()
+        self.thread_.change_value.connect(self.setProgressVal)
 
     def show_window(self):
         self.show()
+        self.thread_.myValue = True
+        self.startProgressBar()
+
+    def startProgressBar(self):
+        self.thread_.start()
+
+    def setProgressVal(self):
+        j = 0
+        for i in self.main_table:
+            txt = self.in_tableWidget.item(j,3).text()
+            try:
+                i["cantidad"] = int(txt)
+                j += 1
+            except:
+                j += 1
+
         
 
     def init_condition(self):
@@ -30,17 +66,104 @@ class Ui_inoutDialog(QtWidgets.QDialog):
         self.cmbCriterio.clear()
         self.cmbCriterio.addItems(item_all)
         self.cmbCriterio.setCurrentIndex(-1)
+        f = open("C:/Users/mrojasc/Desktop/ivan/Genesis/PyQT_sistema/UI/imgs/ware_house.txt","r")
+        self.ware_house = f.readline().split(":")[1]
 
+    def add_item(self, object_):
+        flag = False
+        if len(self.main_table) == 0:
+            _tmpObject = copy.copy(object_)
+            data = {"cod": _tmpObject.book.cod, "isbn": _tmpObject.book.isbn, "name": _tmpObject.book.name, "cantidad": 1}
+            self.main_table.append(data)
+        else:
+            _tmpObject = copy.copy(object_)
+            data = {"cod": _tmpObject.book.cod, "isbn": _tmpObject.book.isbn, "name": _tmpObject.book.name, "cantidad": _tmpObject.almacen_quantity[0]}
+            for item in self.main_table:
+                if item["cod"] == _tmpObject.book.cod:
+                    flag = True
+                    item["cantidad"] += 1 
+            if flag == False:
+                data = {"cod": _tmpObject.book.cod, "isbn": _tmpObject.book.isbn, "name": _tmpObject.book.name, "cantidad": 1}
+                self.main_table.append(data)
+        self.update_table()
+
+    
+
+
+
+    def delete_item(self, object):
+        print("Hola Mundo")
+
+    def update_table(self):
+        flag = QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled
+        flag1 = QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsEditable
+        
+        # -----------  esta parte para llenar la tabla  -----------
+        row = 0
+        self.in_tableWidget.setRowCount(len(self.main_table))
+
+        for ware_li in self.main_table:
+            item = QtWidgets.QTableWidgetItem(ware_li["cod"])
+            item.setFlags(flag)
+            self.in_tableWidget.setItem(row, 0, item)
+            item = QtWidgets.QTableWidgetItem(ware_li["isbn"])
+            item.setFlags(flag)
+            self.in_tableWidget.setItem(row, 1, item)
+            item = QtWidgets.QTableWidgetItem(ware_li["name"])
+            item.setFlags(flag)
+            self.in_tableWidget.setItem(row, 2, item)
+            item = QtWidgets.QTableWidgetItem(str(ware_li["cantidad"]))
+            item.setFlags(flag1)
+            self.in_tableWidget.setItem(row, 3, item)
+            row += 1
+
+    def cancelar(self):
+        self.button_condition = "cancelar"
+        self.close()
+
+
+    def aceptar(self):
+        if str(self.cmbCriterio.currentText()) == "":
+            ret = QMessageBox.information(self, 'Aviso', "Ingresar criterio de operacion")
+        else:
+            self.button_condition = "aceptar"
+            self.close()
+        
+    
 
 
     def closeEvent(self, event):
-        reply = QMessageBox.question(self, 'Window Close', 'Are you sure you want to close the window?',
+        if self.button_condition == "aceptar":
+            reply = QMessageBox.question(self, 'Window Close', 'Esta seguro de ingresar la operacion?',
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                print("Hola Mundo")
+                event.ignore()
+                #event.accept()
+            else:
+                self.button_condition = "cancelar"
+                event.ignore()
+                print("Hola Mundo")        
 
-        if reply == QMessageBox.Yes:
-            event.accept()
-        else:
-            event.ignore()
+        elif self.button_condition == "cancelar":
+            reply = QMessageBox.question(self, 'Window Close', 'al cerrar la ventana, se borrara los datos de la tabla',
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                self.in_tableWidget.clearContents()
+                self.in_tableWidget.setRowCount(0)
+                self.main_table.clear()
+                self.thread_.myValue = False
+                event.accept()
+            else:
+                event.ignore()
+
+    def KeyPressed(self,event):
+        if self.in_tableWidget.selectedIndexes() != []:
+            if event.key() == QtCore.Qt.Key_Delete:
+                temp = self.in_tableWidget.currentRow()    
+                self.main_table.pop(temp)
+                self.update_table()
+        return QtWidgets.QTableWidget.keyPressEvent(self.in_tableWidget, event)
 
     def setupUi(self):
         self.setObjectName("inoutDialog")
@@ -200,6 +323,8 @@ class Ui_inoutDialog(QtWidgets.QDialog):
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
+
+        # -----------  btn aceptar configutarion  -----------
         self.btnAceptar = QtWidgets.QPushButton(self.frame)
         self.btnAceptar.setGeometry(QtCore.QRect(120, 10, 141, 41))
         font = QtGui.QFont()
@@ -210,6 +335,9 @@ class Ui_inoutDialog(QtWidgets.QDialog):
         self.btnAceptar.setFont(font)
         self.btnAceptar.setStyleSheet("background-color: rgb(240, 240, 240);")
         self.btnAceptar.setObjectName("btnAceptar")
+        self.btnAceptar.clicked.connect(self.aceptar)
+
+        # -----------  btn cancelar configuration  -----------
         self.btnCancelar = QtWidgets.QPushButton(self.frame)
         self.btnCancelar.setGeometry(QtCore.QRect(370, 10, 141, 41))
         font = QtGui.QFont()
@@ -220,6 +348,9 @@ class Ui_inoutDialog(QtWidgets.QDialog):
         self.btnCancelar.setFont(font)
         self.btnCancelar.setStyleSheet("background-color: rgb(240, 240, 240);")
         self.btnCancelar.setObjectName("btnCancelar")
+        self.btnCancelar.clicked.connect(self.cancelar)
+
+        # -----------  in_tableWidget  -----------
         self.in_tableWidget = QtWidgets.QTableWidget(self)
         self.in_tableWidget.setGeometry(QtCore.QRect(0, 65, 640, 235))
         self.in_tableWidget.setObjectName("in_tableWidget")
@@ -234,6 +365,19 @@ class Ui_inoutDialog(QtWidgets.QDialog):
         item = QtWidgets.QTableWidgetItem()
         self.in_tableWidget.setHorizontalHeaderItem(3, item)
 
+        self.in_tableWidget.setColumnWidth(0,80)
+        self.in_tableWidget.setColumnWidth(1,120)
+        self.in_tableWidget.setColumnWidth(2,335)
+        self.in_tableWidget.setColumnWidth(3,75)
+        self.in_tableWidget.horizontalHeader().setEnabled(False)
+        self.in_tableWidget.setSelectionMode(1)
+        self.in_tableWidget.setSelectionBehavior(1)
+        self.in_tableWidget.setStyleSheet("selection-background-color: rgb(0, 120, 255);selection-color: rgb(255, 255, 255);")
+        self.in_tableWidget.verticalHeader().hide()
+        self.in_tableWidget.keyPressEvent = self.KeyPressed
+
+
+
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
 
@@ -245,20 +389,34 @@ class Ui_inoutDialog(QtWidgets.QDialog):
         self.lblTitle.setText(_translate("inoutDialog", "------- HOJA DE ENTRADA/SALIDA -------"))
         self.btnAceptar.setText(_translate("inoutDialog", "Aceptar"))
         self.btnCancelar.setText(_translate("inoutDialog", "Cancelar"))
+        
+        font = QtGui.QFont()
+        font.setFamily("Open Sans Semibold")
+        font.setPointSize(11)
+        font.setWeight(85)
+        font.setBold(True)
+
         item = self.in_tableWidget.horizontalHeaderItem(0)
         item.setText(_translate("inoutDialog", "cod"))
+        item.setFont(font)
+        item.setForeground(QBrush(QColor(0,0,0)))
         item = self.in_tableWidget.horizontalHeaderItem(1)
-        item.setText(_translate("inoutDialog", "isb"))
+        item.setText(_translate("inoutDialog", "isbn"))
+        item.setFont(font)
+        item.setForeground(QBrush(QColor(0,0,0)))
         item = self.in_tableWidget.horizontalHeaderItem(2)
         item.setText(_translate("inoutDialog", "nombre"))
+        item.setFont(font)
+        item.setForeground(QBrush(QColor(0,0,0)))
         item = self.in_tableWidget.horizontalHeaderItem(3)
-        item.setText(_translate("inoutDialog", "cantidad"))
+        item.setText(_translate("inoutDialog", "cant."))
+        item.setFont(font)
+        item.setForeground(QBrush(QColor(0,0,0)))
 
 
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    inoutDialog = QtWidgets.QDialog()
-    ui = Ui_inoutDialog(inoutDialog)
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    Dialog = QDialog()
+    ui = Ui_inoutDialog(Dialog)
     ui.show_window()
     sys.exit(app.exec_())

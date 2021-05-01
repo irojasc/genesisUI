@@ -14,6 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from gestor import ware_gestor
 from inout_dialog import Ui_inoutDialog
 import time
+import copy
 
 
 class MyThread(QThread):
@@ -26,28 +27,32 @@ class MyThread(QThread):
         while self.myValue:
             self.change_value.emit()
             time.sleep(1)
-        #self.finished.emit("se termino el hilo")
-
 
 
 class Ui_Dialog(QtWidgets.QDialog):
 #class Ui_Dialog(object):
     # -----------  constructor  -----------
-    def __init__(self, parent=None):
+    #def __init__(self, parent=None):
     #def __init__(self):
+    def __init__(self, parent = None):
         super(Ui_Dialog, self).__init__(parent)
-        self.current_table = []
         self.ware = ware_gestor()
-        
+        self.state = "ventas"
+        self.table = "main"
+        self.setupUi()
+        self.current_table = []
         # state1 = ventas
         # state2 = in/out
         # -----------  se crea el obejto ingreso/egreso  -----------
         self.dialog = QDialog()
         self.ui_dialog = Ui_inoutDialog(self.dialog)
+        #self.ui_dialog = Ui_inoutDialog()
         self.thread = MyThread()
         self.thread.change_value.connect(self.setProgressVal)
-        #self.thread.finished.connect(self.thread_finished_)
-        self.startProgressBar()
+        
+
+    def show_window(self):
+        self.show()
 
     def startProgressBar(self):
         self.thread.start()
@@ -56,8 +61,19 @@ class Ui_Dialog(QtWidgets.QDialog):
         if self.ui_dialog.isVisible():
             self.change_state("in/out")
         else:
+            self.lblAdd.setVisible(False)
             self.change_state("ventas")
+            self.thread.myValue = False
 
+    def closeEvent(self, event):
+        if self.ui_dialog.isVisible():
+            ret = QMessageBox.information(self, 'Aviso', "Debe cerrar la ventana entrada/salida")
+            event.ignore()
+        else:
+            self.thread.myValue = False            
+            event.accept()
+
+    # -----------  evento close_event  -----------
 
 
     # -----------  condiciones iniciales al abrir ventana  -----------
@@ -70,6 +86,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.cmbSearch.clear()
         self.cmbSearch.addItems(item_all)
         self.cmbSearch.setCurrentIndex(-1)
+        self.lblAdd.setVisible(False)
 
 
 
@@ -111,57 +128,73 @@ class Ui_Dialog(QtWidgets.QDialog):
             row += 1
     
     def buscar(self):
+
         if str(self.cmbSearch.currentText()) == "" and self.txtSearch.text() != "":
             ret = QMessageBox.information(self, 'Aviso', "Ingresar criterio de busqueda")
         
         elif str(self.cmbSearch.currentText()) == "" and self.txtSearch.text() == "":
+            self.table = "main"
             self.loadData("main")
-            #temp = self.ware_table.currentRow()
             self.ware_table.setCurrentCell(0,0)
             self.actualizar_img(0)
         else:
+            
             if self.txtSearch.text() == "":
+                self.table = "main"
                 self.loadData("main")
                 self.ware_table.setCurrentCell(0,0)
                 self.actualizar_img(0)
 
-            else:
-                if self.cmbSearch.currentText() == "cod":
-                    if self.ware.buscar("cod",self.txtSearch.text()) > 0:
-                        self.loadData("search")
-                        self.ware_table.setCurrentCell(0,0)
-                        self.actualizar_img(0)
+            elif self.cmbSearch.currentText() == "cod":
+                tmp_len = self.ware.buscar("cod",self.txtSearch.text())
+                if tmp_len > 0:
+                    self.table = "minor"
+                    self.loadData("search")
+                    self.ware_table.setCurrentCell(0,0)
+                    self.actualizar_img(0)
+                else:
+                    ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
+
+            elif self.cmbSearch.currentText() == "isbn":
+                tmp_len = self.ware.buscar("isbn",self.txtSearch.text())
+                if tmp_len > 0:
+                    self.table = "minor"
+                    self.loadData("search")
+                    self.ware_table.setCurrentCell(0,0)
+                    self.actualizar_img(0)
+                    if self.state == "in/out":
+                        self.txtSearch.setText("")    
+                else:
+                    if self.state == "in/out":
+                        ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
+                        self.txtSearch.setText("")
                     else:
                         ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
 
-                elif self.cmbSearch.currentText() == "isbn":
-                    if self.ware.buscar("isbn",self.txtSearch.text()) > 0:
-                        self.loadData("search")
-                        self.ware_table.setCurrentCell(0,0)
-                        self.actualizar_img(0)
-                    else:
-                        ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
+                if tmp_len == 1 and self.state == "in/out":
+                    self.ui_dialog.add_item(self.ware.temp_list[0])
+                    self.txtSearch.setText("")
 
-                elif self.cmbSearch.currentText() == "nombre":
-                    if self.ware.buscar("nombre",self.txtSearch.text()) > 0:
-                        self.loadData("search")
-                        self.ware_table.setCurrentCell(0,0)
-                        self.actualizar_img(0)
-                    else:
-                        ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
+            elif self.cmbSearch.currentText() == "nombre":
+                if self.ware.buscar("nombre",self.txtSearch.text()) > 0:
+                    self.table = "minor"
+                    self.loadData("search")
+                    self.ware_table.setCurrentCell(0,0)
+                    self.actualizar_img(0)
+                else:
+                    ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
 
-                elif self.cmbSearch.currentText() == "autor":
-                    if self.ware.buscar("autor",self.txtSearch.text()) > 0:
-                        self.loadData("search")
-                        self.ware_table.setCurrentCell(0,0)
-                        self.actualizar_img(0)
-                    else:
-                        ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
+            elif self.cmbSearch.currentText() == "autor":
+                if self.ware.buscar("autor",self.txtSearch.text()) > 0:
+                    self.table = "minor"
+                    self.loadData("search")
+                    self.ware_table.setCurrentCell(0,0)
+                    self.actualizar_img(0)
+                else:
+                    ret = QMessageBox.information(self, 'Aviso', "No existe coincidencias")
                    
 
     def actualizar_img(self, tmp):
-        #self.ware_table.clearSelection()
-        #self.ware_table.setCurrentCell(tmp,0)
         if (tmp + 1 <= len(self.real_table)) and (tmp >= 0):
             self.lblImg.setPixmap(QtGui.QPixmap("../UI/imgs/books_imgs/" + self.ware_table.item(tmp,0).text() + ".jpg"))
             self.lblImg.setScaledContents(True) 
@@ -195,6 +228,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         print("Hola Mundo")
 
     def load_table(self, event):
+        self.table = "main"
         self.ware.load_mainlist()
         self.loadData()
         self.ware_table.setCurrentCell(0,0)
@@ -202,29 +236,39 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     def change_state(self, state):
         if state == "ventas":
+            self.state = "ventas"
             self.top_frame.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.298507 rgba(83, 97, 142, 255), stop:1 rgba(97, 69, 128, 255));")
             self.frame_2.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.298507 rgba(83, 97, 142, 255), stop:1 rgba(97, 69, 128, 255));")
         elif state == "in/out":
+            self.state = "in/out"
             self.top_frame.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.298507 rgba(22, 136, 126, 255), stop:1 rgba(56, 110, 142, 255));")
             self.frame_2.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.298507 rgba(22, 136, 126, 255), stop:1 rgba(56, 110, 142, 255));")    
 
 
     def inout_operation(self,event):
-        self.change_state("in/out") 
+        self.change_state("in/out")
+        self.lblAdd.setVisible(True)
+        self.thread.myValue = True
+        self.startProgressBar()
         self.ui_dialog.show_window()
-        
-        
-        
-        
-        
-        
-         
-    def setupUi(self, Dialog):
 
-        Dialog.setObjectName("Dialog")
-        Dialog.resize(1024, 768)
-        Dialog.setFixedSize(1024, 768)
-        self.top_frame = QtWidgets.QFrame(Dialog)
+    def add_bycod(self,event):
+        temp = self.ware_table.currentRow()
+        if self.table == "main" and temp >= 0:
+            self.ui_dialog.add_item(self.ware.ware_list[temp])
+        elif self.table == "minor" and temp >= 0:
+            self.ui_dialog.add_item(self.ware.temp_list[temp])
+
+
+
+        
+        
+    def setupUi(self):
+
+        self.setObjectName("Dialog")
+        self.resize(1024, 768)
+        self.setFixedSize(1024, 768)
+        self.top_frame = QtWidgets.QFrame(self)
         self.top_frame.setGeometry(QtCore.QRect(0, 0, 1024, 100))
         self.top_frame.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.298507 rgba(83, 97, 142, 255), stop:1 rgba(97, 69, 128, 255));")
         self.top_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
@@ -377,8 +421,19 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.label.setObjectName("label")
         self.label.mousePressEvent = self.inout_operation
 
+        # -----------  label Add configuration  -----------
+        self.lblAdd = QtWidgets.QLabel(self.top_frame)
+        self.lblAdd.setGeometry(QtCore.QRect(680, 22, 65, 61))
+        self.lblAdd.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
+        self.lblAdd.setText("")
+        self.lblAdd.setPixmap(QtGui.QPixmap("C:/Users/mrojasc/Desktop/ivan/Genesis/PyQT_sistema/UI/imgs/add_.png"))
+        self.lblAdd.setScaledContents(True)
+        self.lblAdd.setObjectName("lblAdd")
+        self.lblAdd.mousePressEvent = self.add_bycod
+        
+
         # -----------  ware_table configuration  -----------
-        self.ware_table = QtWidgets.QTableWidget(Dialog)
+        self.ware_table = QtWidgets.QTableWidget(self)
         self.ware_table.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers) 
         self.ware_table.setGeometry(QtCore.QRect(0, 130, 1024, 450))
         self.ware_table.setObjectName("ware_table")
@@ -414,13 +469,13 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.ware_table.keyPressEvent = self.KeyPressed
        
         # -----------  frame configuration  -----------
-        self.frame = QtWidgets.QFrame(Dialog)
+        self.frame = QtWidgets.QFrame(self)
         self.frame.setGeometry(QtCore.QRect(0, 100, 1024, 30))
         self.frame.setStyleSheet("background-color: rgb(57, 57, 57);")
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
-        self.frame_2 = QtWidgets.QFrame(Dialog)
+        self.frame_2 = QtWidgets.QFrame(self)
         self.frame_2.setGeometry(QtCore.QRect(0, 580, 1024, 188))
         self.frame_2.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.298507 rgba(83, 97, 142, 255), stop:1 rgba(97, 69, 128, 255));")
         self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
@@ -591,8 +646,8 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.btnVender.setObjectName("btnVender")
         self.btnVender.clicked.connect(self.printCurrent)
 
-        self.retranslateUi(Dialog)
-        QtCore.QMetaObject.connectSlotsByName(Dialog)
+        self.retranslateUi()
+        QtCore.QMetaObject.connectSlotsByName(self)
 
         # -----------  cargar datos en tabla  -----------
         self.ware.load_mainlist()
@@ -602,9 +657,9 @@ class Ui_Dialog(QtWidgets.QDialog):
 
 
 
-    def retranslateUi(self, Dialog):
+    def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Genesis - [Museo del libro]"))
+        self.setWindowTitle(_translate("Dialog", "Genesis - [Museo del libro]"))
         self.search_box.setTitle(_translate("Dialog", "Cuadro de busqueda"))
         self.cmbSearch.setItemText(1, _translate("Dialog", "cod"))
         self.cmbSearch.setItemText(2, _translate("Dialog", "isbn"))
@@ -661,10 +716,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     Dialog = QDialog()
     ui = Ui_Dialog(Dialog)
-    ui.setupUi(Dialog)
     ui.init_condition()
-    Dialog.show()
-    #ui.show()
+    ui.show_window()
     sys.exit(app.exec_())
 
 
