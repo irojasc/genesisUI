@@ -94,6 +94,53 @@ class ware_gestor:
 		return 0
 
 
+	def update_quantity(self, list_, criterio):
+		len_ = len(list_)  
+		if len_ > 1:
+			self.connect_db()
+			try:
+				join_line = "update "
+				for i in range(len_):
+					join_line = join_line + "genesisDB.ware_books " + "t" + str(i+1) + " join "
+				size = len(join_line)
+				join_line = join_line[:size-5]
+				join_line = join_line + "on "
+				for j in range(len_):
+					join_line = join_line + "t" + str(j+1) + ".cod_book= " + "'" + list_[j]["cod"] + "'" + " and " 
+				size = len(join_line)
+				join_line = join_line[:size-4]
+				
+				join_line = join_line + "set "
+				for k in range(len_):
+					join_line = join_line + "t" + str(k+1) + ".cant_SNTG= " + "t" + str(k+1) + ".cant_SNTG" + criterio + str(list_[j]["cantidad"]) + ", "
+				size = len(join_line)
+				join_line = join_line[:size-2]
+				join_line = (join_line + ";")
+				self.cursor.execute(join_line)
+				self.mydb.commit()
+				self.disconnect_db()
+				return True
+			except:
+				print("No se pudo conectar a la DB")
+				self.disconnect_db()		
+				return False
+		elif len_ == 1:
+			self.connect_db()
+			try:
+				query = ("update genesisDB.ware_books set cant_STC = cant_STC + " + str(list_[0]["cantidad"]) + " where cod_book = '" + list_[0]["cod"] + "';")
+				self.cursor.execute(query)
+				self.mydb.commit()
+				self.disconnect_db()
+				return True
+			except:
+				print("No se pudo conectar a la DB")
+				self.disconnect_db()		
+				return False
+		else:
+			print("la tabla se encuentra vacia")
+
+				
+
 	def load_mainlist(self):
 		bookList = []
 		wareList = []

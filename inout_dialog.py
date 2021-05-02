@@ -13,6 +13,7 @@ from PyQt5.QtGui import QFont, QBrush, QColor
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
 from PyQt5.QtCore import Qt, QThread, QObject, pyqtSignal
 from PyQt5.QtWidgets import *
+from gestor import ware_gestor
 import time
 import copy
 
@@ -34,15 +35,24 @@ class Ui_inoutDialog(QtWidgets.QDialog):
         self.main_table = []
         self.ware_house = ""
         self.button_condition = "cancelar"
+        self.criterio = "None"
+        self.ware_in = ware_gestor()
         self.setupUi()
         self.init_condition()
         self.thread_ = MyThread_()
         self.thread_.change_value.connect(self.setProgressVal)
 
     def show_window(self):
-        self.show()
         self.thread_.myValue = True
+        self.button_condition = "cancelar"
+        self.criterio = "None"
         self.startProgressBar()
+        self.main_table.clear()
+        self.update_table()
+        self.cmbCriterio.setCurrentIndex(-1)
+        self.show()
+        
+        
 
     def startProgressBar(self):
         self.thread_.start()
@@ -125,25 +135,32 @@ class Ui_inoutDialog(QtWidgets.QDialog):
     def aceptar(self):
         if str(self.cmbCriterio.currentText()) == "":
             ret = QMessageBox.information(self, 'Aviso', "Ingresar criterio de operacion")
-        else:
+        elif str(self.cmbCriterio.currentText()) == "ingreso":
+            self.criterio = " + "
+            self.button_condition = "aceptar"
+            self.close()
+        elif str(self.cmbCriterio.currentText()) == "egreso":
+            self.criterio = " - "
             self.button_condition = "aceptar"
             self.close()
         
-    
-
 
     def closeEvent(self, event):
         if self.button_condition == "aceptar":
             reply = QMessageBox.question(self, 'Window Close', 'Esta seguro de ingresar la operacion?',
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
-                print("Hola Mundo")
-                event.ignore()
-                #event.accept()
+                if self.ware_in.update_quantity(self.main_table, self.criterio):
+                    event.accept()
+                else:
+                    ret = QMessageBox.information(self, 'Aviso', "No se pudo connectar con la base de datos")
+                    self.button_condition = "cancelar"
+                    self.criterio = "None"
+                    event.ignore()
+
             else:
-                self.button_condition = "cancelar"
-                event.ignore()
-                print("Hola Mundo")        
+                self.criterio = "None"
+                event.ignore()        
 
         elif self.button_condition == "cancelar":
             reply = QMessageBox.question(self, 'Window Close', 'al cerrar la ventana, se borrara los datos de la tabla',
@@ -151,7 +168,6 @@ class Ui_inoutDialog(QtWidgets.QDialog):
             if reply == QMessageBox.Yes:
                 self.in_tableWidget.clearContents()
                 self.in_tableWidget.setRowCount(0)
-                self.main_table.clear()
                 self.thread_.myValue = False
                 event.accept()
             else:

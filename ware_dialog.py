@@ -26,7 +26,7 @@ class MyThread(QThread):
     def run(self):
         while self.myValue:
             self.change_value.emit()
-            time.sleep(1)
+            time.sleep(0.5)
 
 
 class Ui_Dialog(QtWidgets.QDialog):
@@ -39,6 +39,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.ware = ware_gestor()
         self.state = "ventas"
         self.table = "main"
+        self.count = 0
         self.setupUi()
         self.current_table = []
         # state1 = ventas
@@ -57,14 +58,33 @@ class Ui_Dialog(QtWidgets.QDialog):
     def startProgressBar(self):
         self.thread.start()
 
+    def upload_quantity(self):
+        if self.ui_dialog.button_condition == "aceptar" and self.ui_dialog.criterio == " + ":
+            for j in self.ui_dialog.main_table:
+                for i in self.ware.ware_list:
+                    if i.book.cod == j["cod"]:
+                        i.almacen_quantity[1] += j["cantidad"]
+
+        elif self.ui_dialog.button_condition == "aceptar" and self.ui_dialog.criterio == " - ":
+            for j in self.ui_dialog.main_table:
+                for i in self.ware.ware_list:
+                    if i.book.cod == j["cod"]:
+                        i.almacen_quantity[1] -= j["cantidad"]
+        self.loadData()
+
+
     def setProgressVal(self):
         if self.ui_dialog.isVisible():
             self.change_state("in/out")
         else:
-            self.lblAdd.setVisible(False)
-            self.change_state("ventas")
-            self.thread.myValue = False
+            if self.count == 0:
+                self.lblAdd.setVisible(False)
+                self.thread.myValue = False
+                self.change_state("ventas")
+                self.upload_quantity()
+                self.count += 1
 
+    # -----------  close event configuration  -----------
     def closeEvent(self, event):
         if self.ui_dialog.isVisible():
             ret = QMessageBox.information(self, 'Aviso', "Debe cerrar la ventana entrada/salida")
@@ -72,8 +92,6 @@ class Ui_Dialog(QtWidgets.QDialog):
         else:
             self.thread.myValue = False            
             event.accept()
-
-    # -----------  evento close_event  -----------
 
 
     # -----------  condiciones iniciales al abrir ventana  -----------
@@ -249,6 +267,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.change_state("in/out")
         self.lblAdd.setVisible(True)
         self.thread.myValue = True
+        self.count = 0
         self.startProgressBar()
         self.ui_dialog.show_window()
 
