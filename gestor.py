@@ -112,10 +112,11 @@ class ware_gestor:
 				
 				join_line = join_line + "set "
 				for k in range(len_):
-					join_line = join_line + "t" + str(k+1) + ".cant_SNTG= " + "t" + str(k+1) + ".cant_SNTG" + criterio + str(list_[j]["cantidad"]) + ", "
+					join_line = join_line + "t" + str(k+1) + ".cant_STC= " + "t" + str(k+1) + ".cant_STC" + criterio + str(list_[k]["cantidad"]) + ", "# + "t" + str(k+1) + ".ubic_STNG= 'HUMANIDADES', "
 				size = len(join_line)
 				join_line = join_line[:size-2]
 				join_line = (join_line + ";")
+				print(join_line)
 				self.cursor.execute(join_line)
 				self.mydb.commit()
 				self.disconnect_db()
