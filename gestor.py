@@ -128,7 +128,7 @@ class ware_gestor:
 		elif len_ == 1:
 			self.connect_db()
 			try:
-				query = ("update genesisDB.ware_books set cant_STC = cant_STC + " + str(list_[0]["cantidad"]) + " where cod_book = '" + list_[0]["cod"] + "';")
+				query = ("update genesisDB.ware_books set cant_STC = cant_STC" + criterio + str(list_[0]["cantidad"]) + " where cod_book = '" + list_[0]["cod"] + "';")
 				self.cursor.execute(query)
 				self.mydb.commit()
 				self.disconnect_db()
