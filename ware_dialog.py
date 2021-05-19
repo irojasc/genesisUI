@@ -63,13 +63,13 @@ class Ui_Dialog(QtWidgets.QDialog):
             for j in self.ui_dialog.main_table:
                 for i in self.ware.ware_list:
                     if i.book.cod == j["cod"]:
-                        i.almacen_quantity[0] += j["cantidad"]
+                        i.almacen_quantity[1] += j["cantidad"]
 
         elif self.ui_dialog.button_condition == "aceptar" and self.ui_dialog.criterio == " - ":
             for j in self.ui_dialog.main_table:
                 for i in self.ware.ware_list:
                     if i.book.cod == j["cod"]:
-                        i.almacen_quantity[0] -= j["cantidad"]
+                        i.almacen_quantity[1] -= j["cantidad"]
         self.loadData()
 
 

@@ -112,7 +112,8 @@ class ware_gestor:
 				
 				join_line = join_line + "set "
 				for k in range(len_):
-					join_line = join_line + "t" + str(k+1) + ".cant_STC= " + "t" + str(k+1) + ".cant_STC" + criterio + str(list_[k]["cantidad"]) + ", "# + "t" + str(k+1) + ".ubic_STNG= 'HUMANIDADES', "
+					#join_line = join_line + "t" + str(k+1) + ".cant_SNTG= " + "t" + str(k+1) + ".cant_SNTG" + criterio + str(list_[k]["cantidad"]) + ", " + "t" + str(k+1) + ".ubic_STNG= 'INFANTIL', "
+					join_line = join_line + "t" + str(k+1) + ".cant_SNTG= " + "t" + str(k+1) + ".cant_SNTG" + criterio + str(list_[k]["cantidad"])
 				size = len(join_line)
 				join_line = join_line[:size-2]
 				join_line = (join_line + ";")
@@ -128,7 +129,8 @@ class ware_gestor:
 		elif len_ == 1:
 			self.connect_db()
 			try:
-				query = ("update genesisDB.ware_books set cant_STC = cant_STC" + criterio + str(list_[0]["cantidad"]) + " where cod_book = '" + list_[0]["cod"] + "';")
+				#query = ("update genesisDB.ware_books set cant_SNTG = cant_SNTG" + criterio + str(list_[0]["cantidad"]) + ", ubic_STNG= 'INFANTIL' where cod_book = '" + list_[0]["cod"] + "';")
+				query = ("update genesisDB.ware_books set cant_SNTG = cant_SNTG" + criterio + str(list_[0]["cantidad"]) + " where cod_book = '" + list_[0]["cod"] + "';")
 				self.cursor.execute(query)
 				self.mydb.commit()
 				self.disconnect_db()
