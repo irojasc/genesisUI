@@ -113,7 +113,7 @@ class ware_gestor:
 				join_line = join_line + "set "
 				for k in range(len_):
 					#join_line = join_line + "t" + str(k+1) + ".cant_SNTG= " + "t" + str(k+1) + ".cant_SNTG" + criterio + str(list_[k]["cantidad"]) + ", " + "t" + str(k+1) + ".ubic_STNG= 'INFANTIL', "
-					join_line = join_line + "t" + str(k+1) + ".cant_SNTG= " + "t" + str(k+1) + ".cant_SNTG" + criterio + str(list_[k]["cantidad"])
+					join_line = join_line + "t" + str(k+1) + ".cant_SNTG= " + "t" + str(k+1) + ".cant_SNTG" + criterio + str(list_[k]["cantidad"]) + ", "
 				size = len(join_line)
 				join_line = join_line[:size-2]
 				join_line = (join_line + ";")
