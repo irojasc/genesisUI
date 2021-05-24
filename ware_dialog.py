@@ -63,13 +63,13 @@ class Ui_Dialog(QtWidgets.QDialog):
             for j in self.ui_dialog.main_table:
                 for i in self.ware.ware_list:
                     if i.book.cod == j["cod"]:
-                        i.almacen_quantity[1] += j["cantidad"]
+                        i.almacen_quantity[0] += j["cantidad"]
 
         elif self.ui_dialog.button_condition == "aceptar" and self.ui_dialog.criterio == " - ":
             for j in self.ui_dialog.main_table:
                 for i in self.ware.ware_list:
                     if i.book.cod == j["cod"]:
-                        i.almacen_quantity[1] -= j["cantidad"]
+                        i.almacen_quantity[0] -= j["cantidad"]
         self.loadData()
 
 
@@ -277,16 +277,17 @@ class Ui_Dialog(QtWidgets.QDialog):
             self.ui_dialog.add_item(self.ware.ware_list[temp])
         elif self.table == "minor" and temp >= 0:
             self.ui_dialog.add_item(self.ware.temp_list[temp])
-
-
-
-        
+    
+    def resizeEvent(self, event):
+        self.frame_2.setGeometry(QtCore.QRect(0, self.frameGeometry().height() - 188 - 40, 1024, 188))
+        self.ware_table.setGeometry(QtCore.QRect(0, 130, 1024, self.frameGeometry().height() - (188 + 30 + 100 + 40)))
         
     def setupUi(self):
 
         self.setObjectName("Dialog")
-        self.resize(1024, 768)
-        self.setFixedSize(1024, 768)
+        self.resize(1024, 668)
+        self.setFixedSize(1024, 668)
+        self.setMinimumHeight(400)
         self.top_frame = QtWidgets.QFrame(self)
         self.top_frame.setGeometry(QtCore.QRect(0, 0, 1024, 100))
         self.top_frame.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.298507 rgba(83, 97, 142, 255), stop:1 rgba(97, 69, 128, 255));")
@@ -455,6 +456,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.ware_table = QtWidgets.QTableWidget(self)
         self.ware_table.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers) 
         self.ware_table.setGeometry(QtCore.QRect(0, 130, 1024, 450))
+        self.ware_table.setMinimumHeight(100) ## esto se agrego
         self.ware_table.setObjectName("ware_table")
         self.ware_table.setColumnCount(7)
         item = QtWidgets.QTableWidgetItem()
@@ -495,7 +497,9 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.frame_2 = QtWidgets.QFrame(self)
-        self.frame_2.setGeometry(QtCore.QRect(0, 580, 1024, 188))
+        width_ = self.frameGeometry().width()
+        height__ = self.frameGeometry().height()
+        self.frame_2.setGeometry(QtCore.QRect(0, height__ - 188, 1024, 188))
         self.frame_2.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.298507 rgba(83, 97, 142, 255), stop:1 rgba(97, 69, 128, 255));")
         self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
