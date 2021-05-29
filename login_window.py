@@ -9,13 +9,18 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import *
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QEvent
 from gestor import users_gestor
 from datetime import datetime
 from ware_dialog import Ui_Dialog
+from sels import Ui_selsDialog
 import threading
 import time
+from PyQt5.QtGui import * 
+from PyQt5.QtCore import * 
+
 
 user_gest = users_gestor()
 enable_datetime = True
@@ -23,14 +28,18 @@ enable_datetime = True
 
 class Ui_MainWindow(object):
 
-    def __init__(self):
+    def __init__(self, user = None):
+        self.current_user = user
         self.dialog = QDialog()
         self.ui_dialog = Ui_Dialog(self.dialog)
-        self.ui_dialog.init_condition()
+        self.ui_dialog.init_condition(self.current_user)
+        ###
+        self.sels_dialog = QDialog()
+        self.ui_dialog_ = Ui_selsDialog(self.sels_dialog)
 
 
     def open_wareWindow(self, event):
-        self.ui_dialog.init_condition()
+        self.ui_dialog.init_condition(self.current_user)
         self.ui_dialog.show_window()
 
 
@@ -43,19 +52,54 @@ class Ui_MainWindow(object):
         self.t1 = threading.Thread(target=self.update_datetime)
         self.t1.start()
 
+    def ware_ventas(self):
+        self.ui_dialog_.show()
+        
+
     def setupUi(self, MainWindow, user = None):
+
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1280, 1024)
         MainWindow.setFixedSize(1280,1024)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.frame = QtWidgets.QFrame(self.centralwidget)
-        self.frame.setGeometry(QtCore.QRect(0, 0, 1280, 100))
+        self.frame.setGeometry(QtCore.QRect(0, 30, 1280, 100))
         self.frame.setAutoFillBackground(False)
         self.frame.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.298507 rgba(83, 97, 142, 255), stop:1 rgba(97, 69, 128, 255));")
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
+
+        # -----------  Subsection comment block  -----------
+        self.extractAction = QAction("Ventas",MainWindow)
+        self.extractAction.setStatusTip("Ventas diarias")
+        self.extractAction.triggered.connect(self.ware_ventas)
+
+        # -----------  menu bar  -----------
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setObjectName("menubar")
+        self.actionFile = self.menubar.addMenu("Operaciones")
+        self.actionFile.addAction(self.extractAction)
+        self.actionFile.addSeparator()
+        self.actionFile.addAction("Consignacion")
+        # Font for Main menu
+        font = QtGui.QFont()
+        font.setFamily("Open Sans Semibold")
+        font.setPointSize(8)
+        font.setBold(True)
+        font.setWeight(75)
+        # Font for actions
+        font1 = QtGui.QFont()
+        font1.setFamily("Open Sans Semibold")
+        font1.setPointSize(10)
+        font1.setBold(True)
+        font1.setWeight(75)
+        self.menubar.setFont(font)
+        self.actionFile.setFont(font1)
+        
+
+        # -----------  user configuration  -----------
         self.user_label = QtWidgets.QLabel(self.frame)
         self.user_label.setGeometry(QtCore.QRect(1060, 20, 191, 31))
         palette = QtGui.QPalette()
@@ -104,6 +148,7 @@ class Ui_MainWindow(object):
         self.user_label.setFont(font)
         self.user_label.setStyleSheet("background-color: rgb(50, 50, 50);")
         self.user_label.setObjectName("user_label")
+
         self.date_label = QtWidgets.QLabel(self.frame)
         self.date_label.setGeometry(QtCore.QRect(1060, 60, 191, 31))
         palette = QtGui.QPalette()
@@ -171,7 +216,7 @@ class Ui_MainWindow(object):
         self.label_3.setObjectName("label_3")
         self.notification_table = QtWidgets.QTableWidget(self.centralwidget)
         self.notification_table.setEnabled(False)
-        self.notification_table.setGeometry(QtCore.QRect(0, 120, 1280, 617))
+        self.notification_table.setGeometry(QtCore.QRect(0, 150, 1280, 587))
         self.notification_table.setObjectName("notification_table")
         self.notification_table.setColumnCount(3)
         self.notification_table.setRowCount(0)
@@ -182,7 +227,7 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.notification_table.setHorizontalHeaderItem(2, item)
         self.frame_2 = QtWidgets.QFrame(self.centralwidget)
-        self.frame_2.setGeometry(QtCore.QRect(0, 100, 1280, 20))
+        self.frame_2.setGeometry(QtCore.QRect(0, 130, 1280, 20))
         self.frame_2.setStyleSheet("background-color: rgb(50, 50, 50);")
         self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -216,7 +261,8 @@ class Ui_LoginWindow(QtWidgets.QMainWindow):
         param1, param2 = user_gest.check_login(self.lineEdit.text(),self.lineEdit_2.text()) 
         if param1:
             self.window = QtWidgets.QMainWindow()
-            self.ui = Ui_MainWindow()
+            ##self.ui = Ui_MainWindow(self.window)
+            self.ui = Ui_MainWindow(param2)
             self.ui.setupUi(self.window,param2)
             LoginWindow.close()
             self.window.show()
