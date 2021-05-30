@@ -32,8 +32,6 @@ class MyThread(QThread):
 class Ui_Dialog(QtWidgets.QDialog):
 #class Ui_Dialog(object):
     # -----------  constructor  -----------
-    #def __init__(self, parent=None):
-    #def __init__(self):
     def __init__(self, parent = None):
         super(Ui_Dialog, self).__init__(parent)
         self.ware = ware_gestor()
@@ -50,6 +48,8 @@ class Ui_Dialog(QtWidgets.QDialog):
         #self.ui_dialog = Ui_inoutDialog()
         self.thread = MyThread()
         self.thread.change_value.connect(self.setProgressVal)
+        self.init = 0
+        self.current_user = None
         
 
     def show_window(self):
@@ -95,8 +95,9 @@ class Ui_Dialog(QtWidgets.QDialog):
 
 
     # -----------  condiciones iniciales al abrir ventana  -----------
-    def init_condition(self):
+    def init_condition(self, user = None):
         # -----------  set item conditions  -----------
+        self.current_user = user
         self.cmbSearch.setEnabled(True)
         self.txtSearch.setEnabled(True)
         self.btnBuscar.setEnabled(True)
@@ -242,8 +243,41 @@ class Ui_Dialog(QtWidgets.QDialog):
         return QtWidgets.QTableWidget.keyPressEvent(self.ware_table, event)
 
     
-    def printCurrent(self):
-        print("Hola Mundo")
+    def vender(self):
+        condicion = [False,False]
+        ok = False
+        ret = QMessageBox.question(self, '[TIPO DE PAGO]', "VENTA: EFECTIVO(SI), VISA(NO)", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
+        if ret == QMessageBox.Yes:
+            print('LA VENTA ES EN EFECTIVO')
+            condicion = [True,False]
+        elif ret == QMessageBox.No:
+            condicion = [True,False]
+            print('LA VENTA ES CON TARJETA')
+        else:
+            condicion = [False,False]
+
+        if condicion[0]:
+            text, ok = QInputDialog.getText(self, '[CANTIDAD]', 'INGRESE CANTIDAD DEL LIBRO VENDIDO')
+            try:
+                if ok != False:
+                    value = int(text)
+                    if ok and value > 0:
+                        condicion[1] = True
+                    elif ok and value < 0:
+                        condicion[1] = False
+                        QMessageBox.information(self, "ADVERTENCIA", "EL TEXTO DEBE SER UN NUMERO POSITIVO")
+                else:
+                    condicion[1] = False
+            except:
+                condicion[1] = False
+                ret = QMessageBox.information(self, 'ADVERTENCIA', "CAMPO VACIO O VALOR INVALIDO")
+
+        if condicion[0] and condicion[1]:
+            print("La venta se realizo con exito")
+        else:
+            print("Problemas en la venta")
+
+
 
     def load_table(self, event):
         self.table = "main"
@@ -269,7 +303,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.thread.myValue = True
         self.count = 0
         self.startProgressBar()
-        self.ui_dialog.show_window()
+        self.ui_dialog.show_window(self.current_user)
 
     def add_bycod(self,event):
         temp = self.ware_table.currentRow()
@@ -279,9 +313,10 @@ class Ui_Dialog(QtWidgets.QDialog):
             self.ui_dialog.add_item(self.ware.temp_list[temp])
     
     def resizeEvent(self, event):
-        self.frame_2.setGeometry(QtCore.QRect(0, self.frameGeometry().height() - 188 - 40, 1024, 188))
+        if self.init > 0:
+            self.frame_2.setGeometry(QtCore.QRect(0, self.frameGeometry().height() - 188 - 40, 1024, 188))
         self.ware_table.setGeometry(QtCore.QRect(0, 130, 1024, self.frameGeometry().height() - (188 + 30 + 100 + 40)))
-        
+        self.init += 1
     def setupUi(self):
 
         self.setObjectName("Dialog")
@@ -667,7 +702,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.btnVender.setFont(font)
         self.btnVender.setStyleSheet("background-color: rgb(240, 240, 240);")
         self.btnVender.setObjectName("btnVender")
-        self.btnVender.clicked.connect(self.printCurrent)
+        self.btnVender.clicked.connect(self.vender)
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -682,7 +717,7 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Dialog", "Genesis - [Museo del libro]"))
+        self.setWindowTitle(_translate("Dialog", "Almacen - [Museo del libro]"))
         self.search_box.setTitle(_translate("Dialog", "Cuadro de busqueda"))
         self.cmbSearch.setItemText(1, _translate("Dialog", "cod"))
         self.cmbSearch.setItemText(2, _translate("Dialog", "isbn"))

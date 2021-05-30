@@ -2,6 +2,8 @@ import mysql.connector
 from objects import user
 from objects import ware_book
 from objects import libro
+from datetime import date
+import socket
 
 class users_gestor:
 	def __init__(self):
@@ -38,8 +40,118 @@ class users_gestor:
 	def check_login(self, name, passwd):
 		for i in self.users:
 			if i.user == name and i.passwd == passwd:
-				return True, user(i.id ,i.user)
+				return True, user(i.id ,i.user ,i.passwd, i.level)
 		return False, user()
+
+
+class wares:
+	def __init__(self):
+		hostname = socket.gethostname()
+		self.localIP = str(socket.gethostbyname(hostname))
+		self.dict_ = {'id': 0 ,'abrev': "NO SE ENCUENTRA UBICACION",'direccion': "",'telefono': "",'ip': ""}
+
+	def connect_db(self):
+		self.mydb = mysql.connector.connect(host = "mysql-28407-0.cloudclusters.net", user="admin01", passwd="alayza2213", port="28416")
+		self.cursor = self.mydb.cursor()
+
+	def disconnect_db(self):
+		self.cursor.close()
+		self.mydb.close()
+
+	def get_Abrev(self):
+		self.connect_db()
+		try:
+			query = ("select * from genesisDB.wares where ip = '" + self.localIP + "';")
+			self.cursor.execute(query)
+			for (id, abrev, direccion, telefono, ip) in self.cursor:
+				self.dict_['id'] = int(id)
+				self.dict_['abrev'] = str(abrev)
+				self.dict_['direccion'] = str(direccion)
+				self.dict_['telefono'] = str(telefono)
+				self.dict_['ip'] = str(ip)
+			return self.dict_['abrev']
+		except:
+			return self.dict_['abrev']
+			print("No se puede conectar a la base de datos")
+
+
+
+class dayly_sales:
+	def __init__(self):
+		self.currentDay = str(date.today())
+
+	def connect_db(self):
+		self.mydb = mysql.connector.connect(host = "mysql-28407-0.cloudclusters.net", user="admin01", passwd="alayza2213", port="28416")
+		self.cursor = self.mydb.cursor()
+
+	def disconnect_db(self):
+		self.cursor.close()
+		self.mydb.close()
+
+	def verify_day(self):
+		self.connect_db()
+		id_ = 0
+		try:
+			query = ("select id from genesisDB.dayly_sales where date_ = '" + str(date.today()) + " 00:00:00';")
+			self.cursor.execute(query)
+			for (id) in self.cursor:
+				if type(id) is tuple:
+					id_ = int(id[0])
+				else:
+					id_ = int(id)
+			if id_ > 0:
+				return True 
+			else:
+				return False
+		except:
+			return False
+			print("No se puede conectar a la base de datos")
+
+	def insert_currentDay(self):
+		self.connect_db()
+		try:
+			query = ("insert into genesisDB.dayly_sales (date_) values ('" + str(date.today()) + " 00:00:00');")
+			self.cursor.execute(query)
+			self.mydb.commit()
+			self.disconnect_db()
+			return True
+		except:
+			print("No se puede conectar a la base de datos")
+			return False
+			
+
+	def changeNumber2Day(self, val = 7, day = ""):
+		if val == 0:
+			return "Lunes" + day
+		elif val == 1:
+			return "Martes " + day
+		elif val == 2:
+			return "Miercoles " + day
+		elif val == 3:
+			return "Jueves " + day
+		elif val == 4:
+			return "Viernes " + day
+		elif val == 5:
+			return "Sabado " + day
+		elif val == 6:
+			return "Domingo " + day
+		else:
+			return "Error"
+
+	def get_lastThreedays(self):
+		List_ = []
+		self.connect_db()
+		try:
+			query = ("select date_ from genesisDB.dayly_sales order by id desc limit 3;")
+			self.cursor.execute(query)
+			for (date_) in self.cursor:
+				List_.append(self.changeNumber2Day(int(date_[0].weekday()),date_[0].strftime("%d")))
+			self.disconnect_db()
+			return List_
+		except:
+			print("No se puede conectar a la base de datos")
+			return List_
+			
 
 
 

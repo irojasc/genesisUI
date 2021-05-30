@@ -13,6 +13,8 @@ from PyQt5.QtGui import *
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QEvent
 from gestor import users_gestor
+from gestor import wares
+from gestor import dayly_sales
 from datetime import datetime
 from ware_dialog import Ui_Dialog
 from sels import Ui_selsDialog
@@ -20,6 +22,7 @@ import threading
 import time
 from PyQt5.QtGui import * 
 from PyQt5.QtCore import * 
+import socket
 
 
 user_gest = users_gestor()
@@ -29,13 +32,18 @@ enable_datetime = True
 class Ui_MainWindow(object):
 
     def __init__(self, user = None):
-        self.current_user = user
+        self.current_ware = wares()
+        self.day_object = dayly_sales()
+        self.current_user = user # usuario que se envia a wareDialog
+        self.current_day = self.day_object.verify_day()
         self.dialog = QDialog()
         self.ui_dialog = Ui_Dialog(self.dialog)
         self.ui_dialog.init_condition(self.current_user)
         ###
         self.sels_dialog = QDialog()
         self.ui_dialog_ = Ui_selsDialog(self.sels_dialog)
+        self.ui_dialog_.init_condition(self.current_ware.get_Abrev(), self.current_day)
+        
 
 
     def open_wareWindow(self, event):
@@ -54,7 +62,6 @@ class Ui_MainWindow(object):
 
     def ware_ventas(self):
         self.ui_dialog_.show()
-        
 
     def setupUi(self, MainWindow, user = None):
 
@@ -237,6 +244,15 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow, user.user)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.run_threads()
+        bool_condition = self.current_day
+        if bool_condition != True:
+            ret = QMessageBox.question(MainWindow, 'Genesis - [Museo del Libro]', "Va iniciar un nuevo día de venta?", QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            if ret == QMessageBox.Yes:
+                self.day_object.insert_currentDay()
+                self.ui_dialog_.init_condition(self.current_ware.get_Abrev(), bool_condition)
+
+
+
 
     def retranslateUi(self, MainWindow, user):
         _translate = QtCore.QCoreApplication.translate

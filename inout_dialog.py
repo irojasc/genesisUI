@@ -33,51 +33,53 @@ class Ui_inoutDialog(QtWidgets.QDialog):
     def __init__(self, parent):
         super(Ui_inoutDialog, self).__init__(parent)
         self.main_table = []
-        self.ware_house = ""
         self.button_condition = "cancelar"
         self.criterio = "None"
         self.ware_in = ware_gestor()
         self.setupUi()
-        self.init_condition()
         self.thread_ = MyThread_()
         self.thread_.change_value.connect(self.setProgressVal)
+        self.current_user = None
 
-    def show_window(self):
+    def show_window(self, user = None):
+        self.current_user = user
+        self.init_condition()
         self.thread_.myValue = True
         self.button_condition = "cancelar"
         self.criterio = "None"
         self.startProgressBar()
         self.main_table.clear()
         self.update_table()
-        self.cmbCriterio.setCurrentIndex(-1)
         self.show()
         
-        
-
     def startProgressBar(self):
         self.thread_.start()
 
     def setProgressVal(self):
         j = 0
+        cant_ = 0
         for i in self.main_table:
             txt = self.in_tableWidget.item(j,3).text()
             try:
                 i["cantidad"] = int(txt)
+                cant_ += i["cantidad"]
                 j += 1
             except:
+                cant_ += i["cantidad"]
                 j += 1
+        self.lblTitle_cant.setText("Cantidad: " + str(cant_))
 
-        
-
-    def init_condition(self):
+    def init_condition(self, user = None):
         # -----------  set item conditions  -----------
         self.cmbCriterio.setEnabled(True)
-        item_all = ['ingreso','egreso']
+        if int(self.current_user.level) <= 2:
+            item_all = ['ingreso']
+        elif int(self.current_user.level) == 3:
+            item_all = ['ingreso','egreso']
         self.cmbCriterio.clear()
         self.cmbCriterio.addItems(item_all)
         self.cmbCriterio.setCurrentIndex(-1)
-        f = open("C:/Users/mrojasc/Desktop/ivan/Genesis/PyQT_sistema/UI/imgs/ware_house.txt","r")
-        self.ware_house = f.readline().split(":")[1]
+        
 
     def add_item(self, object_):
         flag = False
@@ -96,10 +98,6 @@ class Ui_inoutDialog(QtWidgets.QDialog):
                 data = {"cod": _tmpObject.book.cod, "isbn": _tmpObject.book.isbn, "name": _tmpObject.book.name, "cantidad": 1}
                 self.main_table.append(data)
         self.update_table()
-
-    
-
-
 
     def delete_item(self, object):
         print("Hola Mundo")
@@ -284,6 +282,8 @@ class Ui_inoutDialog(QtWidgets.QDialog):
         font.setWeight(75)
         self.cmbCriterio.setFont(font)
         self.cmbCriterio.setObjectName("cmbCriterio")
+
+        # -----------  lblTitle  -----------
         self.lblTitle = QtWidgets.QLabel(self.frame_2)
         self.lblTitle.setGeometry(QtCore.QRect(235, 19, 361, 31))
         palette = QtGui.QPalette()
@@ -333,6 +333,8 @@ class Ui_inoutDialog(QtWidgets.QDialog):
         self.lblTitle.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
         self.lblTitle.setWordWrap(False)
         self.lblTitle.setObjectName("lblTitle")
+
+        # -----------  frame configuration  -----------
         self.frame = QtWidgets.QFrame(self)
         self.frame.setGeometry(QtCore.QRect(0, 300, 640, 60))
         self.frame.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.298507 rgba(22, 136, 126, 255), stop:1 rgba(56, 110, 142, 255));")
@@ -340,9 +342,61 @@ class Ui_inoutDialog(QtWidgets.QDialog):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
 
+        # -----------  cantidad label  -----------
+        self.lblTitle_cant = QtWidgets.QLabel(self.frame)
+        self.lblTitle_cant.setGeometry(QtCore.QRect(430, 12, 361, 31))
+        palette = QtGui.QPalette()
+        brush = QtGui.QBrush(QtGui.QColor(240, 240, 240))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.WindowText, brush)
+        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 0))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Button, brush)
+        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 0))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Base, brush)
+        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 0))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
+        brush = QtGui.QBrush(QtGui.QColor(240, 240, 240))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.WindowText, brush)
+        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 0))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Button, brush)
+        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 0))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Base, brush)
+        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 0))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
+        brush = QtGui.QBrush(QtGui.QColor(120, 120, 120))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.WindowText, brush)
+        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 0))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Button, brush)
+        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 0))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Base, brush)
+        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 0))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Window, brush)
+        self.lblTitle_cant.setPalette(palette)
+        font = QtGui.QFont()
+        font.setFamily("Open Sans Semibold")
+        font.setPointSize(15)
+        font.setBold(True)
+        font.setWeight(75)
+        self.lblTitle_cant.setFont(font)
+        #self.lblTitle_cant.setStyleSheet("background-color: rgba(255, 255, 0, 0);")
+        self.lblTitle_cant.setWordWrap(False)
+        self.lblTitle_cant.setObjectName("lblTitle_cant")
+
         # -----------  btn aceptar configutarion  -----------
         self.btnAceptar = QtWidgets.QPushButton(self.frame)
-        self.btnAceptar.setGeometry(QtCore.QRect(120, 10, 141, 41))
+        #self.btnAceptar.setGeometry(QtCore.QRect(120, 10, 141, 41))
+        self.btnAceptar.setGeometry(QtCore.QRect(50, 10, 141, 41))
         font = QtGui.QFont()
         font.setFamily("Open Sans Semibold")
         font.setPointSize(11)
@@ -355,7 +409,7 @@ class Ui_inoutDialog(QtWidgets.QDialog):
 
         # -----------  btn cancelar configuration  -----------
         self.btnCancelar = QtWidgets.QPushButton(self.frame)
-        self.btnCancelar.setGeometry(QtCore.QRect(370, 10, 141, 41))
+        self.btnCancelar.setGeometry(QtCore.QRect(250, 10, 141, 41))
         font = QtGui.QFont()
         font.setFamily("Open Sans Semibold")
         font.setPointSize(11)
@@ -403,6 +457,7 @@ class Ui_inoutDialog(QtWidgets.QDialog):
         self.setWindowTitle(_translate("Dialog", "Genesis - [Museo del libro]"))
         self.gbCriterio.setTitle(_translate("inoutDialog", "Criterio"))
         self.lblTitle.setText(_translate("inoutDialog", "------- HOJA DE ENTRADA/SALIDA -------"))
+        self.lblTitle_cant.setText(_translate("inoutDialog", "Cantidad: 0"))
         self.btnAceptar.setText(_translate("inoutDialog", "Aceptar"))
         self.btnCancelar.setText(_translate("inoutDialog", "Cancelar"))
         
