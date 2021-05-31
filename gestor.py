@@ -120,21 +120,21 @@ class dayly_sales:
 			return False
 			
 
-	def changeNumber2Day(self, val = 7, day = ""):
+	def changeNumber2Day(self, val = 7, day = "", active_ = "INACTIVO"):
 		if val == 0:
-			return "Lunes" + day
+			return "Lunes" + day + " - ["+ active_ + "]"
 		elif val == 1:
-			return "Martes " + day
+			return "Martes " + day + " - ["+ active_ + "]"
 		elif val == 2:
-			return "Miercoles " + day
+			return "Miercoles " + day + " - ["+ active_ + "]"
 		elif val == 3:
-			return "Jueves " + day
+			return "Jueves " + day + " - ["+ active_ + "]"
 		elif val == 4:
-			return "Viernes " + day
+			return "Viernes " + day + " - ["+ active_ + "]"
 		elif val == 5:
-			return "Sabado " + day
+			return "Sabado " + day + " - ["+ active_ + "]"
 		elif val == 6:
-			return "Domingo " + day
+			return "Domingo " + day + " - ["+ active_ + "]"
 		else:
 			return "Error"
 
@@ -142,10 +142,11 @@ class dayly_sales:
 		List_ = []
 		self.connect_db()
 		try:
-			query = ("select date_ from genesisDB.dayly_sales order by id desc limit 3;")
+			query = ("select date_, condition_ from genesisDB.dayly_sales order by id desc limit 3;")
 			self.cursor.execute(query)
-			for (date_) in self.cursor:
-				List_.append(self.changeNumber2Day(int(date_[0].weekday()),date_[0].strftime("%d")))
+			for (date_,condition_) in self.cursor:
+				dict_ = {"tab": self.changeNumber2Day(int(date_.weekday()),date_.strftime("%d"),condition_), 'condition': str(condition_)}
+				List_.append(dict_)
 			self.disconnect_db()
 			return List_
 		except:
