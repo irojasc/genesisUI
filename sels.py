@@ -18,17 +18,39 @@ class Ui_selsDialog(QtWidgets.QDialog):
         super(Ui_selsDialog, self).__init__(parent)
         self.setupUi()
         self.sales_object = dayly_sales()
+        self.List_ = []
 
     def init_condition(self, wareAbrev = '', condition = False):
         self.wareAbrev = wareAbrev
         if condition:
-            List_ = self.sales_object.get_lastThreedays()
-            if len(List_) > 0:
-                self.tabWidget.setTabText(0,List_[0])
-                self.tabWidget.setTabText(1,List_[1])
-                self.tabWidget.setTabText(2,List_[2])
+            self.List_ = self.sales_object.get_lastThreedays()
+            if len(self.List_) > 0:
+                self.tabWidget.setTabText(0,self.List_[0]['tab'])
+                self.tabWidget.setTabText(1,self.List_[1]['tab'])
+                self.tabWidget.setTabText(2,self.List_[2]['tab'])
 
+    def onChange(self,i): #changed!
+        if i == 0:
+            if self.List_[0]['condition'] == 'INACTIVO':
+                self.lblPrinter.setVisible(False)
+            else:
+                self.lblPrinter.setVisible(True)
+        elif i == 1:
+            if self.List_[1]['condition'] == 'INACTIVO':
+                self.lblPrinter.setVisible(False)
+            else:
+                self.lblPrinter.setVisible(True)
+        elif i == 2:
+            if self.List_[2]['condition'] == 'INACTIVO':
+                self.lblPrinter.setVisible(False)
+            else:
+                self.lblPrinter.setVisible(True)
 
+    def currentDay_printer(self):
+        if self.List_[0]['condition'] == 'INACTIVO':
+            self.lblPrinter.setVisible(False)
+        else:
+            self.lblPrinter.setVisible(True)
 
     def setupUi(self):
         self.setObjectName("selsDialog")
@@ -133,13 +155,23 @@ class Ui_selsDialog(QtWidgets.QDialog):
         self.titleLabel.setObjectName("titleLabel")
 
         # -----------  tabWidget Configuration  -----------
+        tab_shape = QtWidgets.QTabWidget.Triangular
         self.tabWidget = QtWidgets.QTabWidget(self)
         self.tabWidget.setGeometry(QtCore.QRect(0, 60, 720, 250))
         self.tabWidget.setObjectName("tabWidget")
+        font = QtGui.QFont()
+        font.setFamily("Open Sans Semibold")
+        font.setPointSize(10)
+        font.setBold(True)
+        font.setWeight(75)
+        self.tabWidget.setFont(font)
+        self.tabWidget.setTabShape(tab_shape)
+        self.tabWidget.blockSignals(True)
+        self.tabWidget.currentChanged.connect(self.onChange)
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
+
         # -----------  QtableWidget_0  -----------
-        
         self.tableWidget = QtWidgets.QTableWidget(self.tab)
         self.tableWidget.setGeometry(QtCore.QRect(0, 0, 720, 220))
         self.tableWidget.setObjectName("tableWidget")
@@ -353,7 +385,7 @@ class Ui_selsDialog(QtWidgets.QDialog):
         self.label = QtWidgets.QLabel(self.frame_2)
         self.label.setGeometry(QtCore.QRect(578, 13, 3, 71))
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap("../../../../line.png"))
+        self.label.setPixmap(QtGui.QPixmap("C:/Users/mrojasc/Desktop/ivan/Genesis/PyQT_sistema/UI/imgs/line.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
 
@@ -361,7 +393,7 @@ class Ui_selsDialog(QtWidgets.QDialog):
         self.lblPrinter = QtWidgets.QLabel(self.frame)
         self.lblPrinter.setGeometry(QtCore.QRect(665, 10, 42, 42))
         self.lblPrinter.setText("")
-        self.lblPrinter.setPixmap(QtGui.QPixmap("../../../../printer.png"))
+        self.lblPrinter.setPixmap(QtGui.QPixmap("C:/Users/mrojasc/Desktop/ivan/Genesis/PyQT_sistema/UI/imgs/printer.png"))
         self.lblPrinter.setScaledContents(True)
         self.lblPrinter.setObjectName("lblPrinter")
 
@@ -394,6 +426,7 @@ class Ui_selsDialog(QtWidgets.QDialog):
         self.retranslateUi()
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(self)
+        self.tabWidget.blockSignals(False)
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
