@@ -61,6 +61,7 @@ class Ui_MainWindow(object):
         self.t1.start()
 
     def ware_ventas(self):
+        self.ui_dialog_.currentDay_printer()
         self.ui_dialog_.show()
 
     def setupUi(self, MainWindow, user = None):
@@ -417,10 +418,29 @@ class Ui_LoginWindow(QtWidgets.QMainWindow):
         self.lineEdit_2.setPlaceholderText(_translate("LoginWindow", "Password"))
 
 
+StyleSheet = '''
+QTabWidget {
+    background-color: green;
+}
+QTabWidget::pane {
+    border: 1px solid #31363B;
+    padding: 2px;
+    margin:  0px;
+}
+QTabBar {
+    border: 0px solid #31363B;
+    color: yellow;
+}
+QTabBar::tab:top:selected {
+    color: red;
+}
+'''
+
 if __name__ == "__main__":
 
     import sys
     app = QtWidgets.QApplication(sys.argv)
+    app.setStyleSheet(StyleSheet)
     LoginWindow = QtWidgets.QMainWindow()
     ui = Ui_LoginWindow()
     ui.setupUi(LoginWindow)
