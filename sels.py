@@ -10,7 +10,21 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont, QBrush, QColor
+from PyQt5.QtWidgets import *
 from gestor import dayly_sales
+from PyQt5.QtCore import Qt, QThread, QObject, pyqtSignal
+import time
+
+
+class MyThread_(QThread):
+    # Create a counter thread
+    change_value = pyqtSignal()
+    #finished = pyqtSignal(str)
+    myValue = True
+    def run(self):
+        while self.myValue:
+            self.change_value.emit()
+            time.sleep(1)
 
 
 class Ui_selsDialog(QtWidgets.QDialog):
@@ -18,39 +32,384 @@ class Ui_selsDialog(QtWidgets.QDialog):
         super(Ui_selsDialog, self).__init__(parent)
         self.setupUi()
         self.sales_object = dayly_sales()
-        self.List_ = []
+        self.real_table1 = []
+        self.real_table2 = []
+        self.real_table3 = []
+        self.cajaChica_1 = 0.0
+        self.cajaChica_2 = 0.0
+        self.cajaChica_3 = 0.0
+        self.currentTab = 1
 
-    def init_condition(self, wareAbrev = '', condition = False):
+    def init_condition(self, wareAbrev = 'STC'):
+        ### List_ es donde se almacena los estados de los dias
+        ### List_ ['tab','condition']
         self.wareAbrev = wareAbrev
-        if condition:
-            self.List_ = self.sales_object.get_lastThreedays()
-            if len(self.List_) > 0:
-                self.tabWidget.setTabText(0,self.List_[0]['tab'])
-                self.tabWidget.setTabText(1,self.List_[1]['tab'])
-                self.tabWidget.setTabText(2,self.List_[2]['tab'])
+        self.List_ = self.sales_object.get_lastThreedays()
+        if len(self.List_) > 0:
+            self.tabWidget.setTabText(0,self.List_[0]['tab'])
+            self.tabWidget.setTabText(1,self.List_[1]['tab'])
+            self.tabWidget.setTabText(2,self.List_[2]['tab'])
+
+    def lastTwo(self):
+        flag = QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled
+        self.sales_object.getLastTwo()
+        self.real_table2 = self.sales_object.List2.copy()
+        row = 0
+        self.tableWidget_2.setRowCount(len(self.real_table2)-1)
+
+        for ware_li in self.real_table2:
+            id_ = ware_li['id']
+            if id_ != 0:
+                item = QtWidgets.QTableWidgetItem(ware_li['hora'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 0, item)
+                if ware_li['metodo'] == False:
+                    self.tableWidget_2.item(row,0).setBackground(QtGui.QColor(255,255,0))
+                item = QtWidgets.QTableWidgetItem(ware_li['user'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 1, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['codBook'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 2, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['titulo'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 3, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['cant'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 4, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pu'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 5, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pv'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 6, item)
+                row += 1
+            else:
+                self.cajaChica_2 = str(ware_li['pv'])
+
+
+        self.real_table3 = self.sales_object.List3.copy()
+        row = 0
+        self.tableWidget_3.setRowCount(len(self.real_table3)-1)
+
+        for ware_li in self.real_table3:
+            id_ = ware_li['id']
+            if id_ != 0:
+                item = QtWidgets.QTableWidgetItem(ware_li['hora'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 0, item)
+                if ware_li['metodo'] == False:
+                    self.tableWidget_3.item(row,0).setBackground(QtGui.QColor(255,255,0))
+                item = QtWidgets.QTableWidgetItem(ware_li['user'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 1, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['codBook'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 2, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['titulo'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 3, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['cant'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 4, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pu'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 5, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pv'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 6, item)
+                row += 1
+            else:
+                self.cajaChica_3 = str(ware_li['pv'])
+
+    def lastTables(self):
+        flag = QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled
+        self.sales_object.getLastThree()
+        self.real_table1 = self.sales_object.List1.copy()
+        row = 0
+        self.tableWidget.setRowCount(len(self.real_table1) - 1)
+
+        for ware_li in self.real_table1:
+            id_ = ware_li['id']
+            if id_ != 0:
+                item = QtWidgets.QTableWidgetItem(ware_li['hora'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 0, item)
+                if ware_li['metodo'] == False:
+                    self.tableWidget.item(row,0).setBackground(QtGui.QColor(255,255,0))
+                item = QtWidgets.QTableWidgetItem(ware_li['user'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 1, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['codBook'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 2, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['titulo'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 3, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['cant'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 4, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pu'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 5, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pv'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 6, item)
+                row += 1
+            else:
+                self.lineEdit.setText(str(ware_li['pv']))
+                if self.lineEdit.text() == "":
+                    self.cajaChica_1 = 0.0
+                else:
+                    self.cajaChica_1 = str(ware_li['pv'])
+
+
+        self.real_table2 = self.sales_object.List2.copy()
+        row = 0
+        self.tableWidget_2.setRowCount(len(self.real_table2) - 1)
+
+        for ware_li in self.real_table2:
+            id_ = ware_li['id']
+            if id_ != 0:
+                item = QtWidgets.QTableWidgetItem(ware_li['hora'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 0, item)
+                if ware_li['metodo'] == False:
+                    self.tableWidget_2.item(row,0).setBackground(QtGui.QColor(255,255,0))
+                item = QtWidgets.QTableWidgetItem(ware_li['user'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 1, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['codBook'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 2, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['titulo'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 3, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['cant'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 4, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pu'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 5, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pv'])
+                item.setFlags(flag)
+                self.tableWidget_2.setItem(row, 6, item)
+                row += 1
+            else:
+                self.cajaChica_2 = str(ware_li['pv'])
+
+
+        self.real_table3 = self.sales_object.List3.copy()
+        row = 0
+        self.tableWidget_3.setRowCount(len(self.real_table3) - 1)
+
+        for ware_li in self.real_table3:
+            id_ = ware_li['id']
+            if id_ != 0:
+                item = QtWidgets.QTableWidgetItem(ware_li['hora'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 0, item)
+                if ware_li['metodo'] == False:
+                    self.tableWidget_3.item(row,0).setBackground(QtGui.QColor(255,255,0))
+                item = QtWidgets.QTableWidgetItem(ware_li['user'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 1, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['codBook'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 2, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['titulo'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 3, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['cant'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 4, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pu'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 5, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pv'])
+                item.setFlags(flag)
+                self.tableWidget_3.setItem(row, 6, item)
+                row += 1
+            else:
+                self.cajaChica_3 = str(ware_li['pv'])
+
+        self.tabWidget.setCurrentIndex(0)
+        self.printAmount(1)
+        self.lineEdit.setEnabled(False)
+
+    def currentTable(self):
+        flag = QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled
+        #self.currentID_day = currentID
+        self.sales_object.currentSales_(self.currentID_day)
+        self.real_table1 = self.sales_object.List1.copy()
+        row = 0
+        self.tableWidget.setRowCount(len(self.real_table1) - 1)
+
+        for ware_li in self.real_table1:
+            id_ = ware_li['id']
+            if id_ != 0:
+                
+                item = QtWidgets.QTableWidgetItem(ware_li['hora'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 0, item)
+                if ware_li['metodo'] == False:
+                    self.tableWidget.item(row,0).setBackground(QtGui.QColor(255,255,0))
+                item = QtWidgets.QTableWidgetItem(ware_li['user'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 1, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['codBook'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 2, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['titulo'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 3, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['cant'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 4, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pu'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 5, item)
+                item = QtWidgets.QTableWidgetItem(ware_li['pv'])
+                item.setFlags(flag)
+                self.tableWidget.setItem(row, 6, item)
+
+                row += 1
+            else:
+                self.lineEdit.setText(str(ware_li['pv']))
+                if self.lineEdit.text() == "":
+                    self.cajaChica_1 = 0.0
+                else:
+                    self.cajaChica_1 = str(ware_li['pv'])
+        self.printAmount(1)
+        self.currentTab = 1
+        self.tabWidget.setCurrentIndex(0)
+
+
+    def printAmount(self, listNumber):
+        efectivo = 0.0
+        visa = 0.0
+        if listNumber == 1:
+            for k in self.real_table1:
+                if k['id'] != 0:
+                    if k['metodo'] == True:
+                        efectivo += float(k['pv'])
+                    else:
+                        visa += float(k['pv'])
+            total = efectivo + visa - float(self.lineEdit.text())
+            self.lblVisadinero.setText(str(visa))
+            self.lblEfectivodinero.setText(str(efectivo))
+            self.lblTotaldinero.setText(str(total)) 
+        elif listNumber == 2:
+            for k in self.real_table2:
+                if k['id'] != 0:
+                    if k['metodo'] == True:
+                        efectivo += float(k['pv'])
+                    else:
+                        visa += float(k['pv'])
+            total = efectivo + visa - float(self.lineEdit.text())
+            self.lblVisadinero.setText(str(visa))
+            self.lblEfectivodinero.setText(str(efectivo))
+            self.lblTotaldinero.setText(str(total)) 
+        elif listNumber == 3:
+            for k in self.real_table3:
+                if k['id'] != 0:
+                    if k['metodo'] == True:
+                        efectivo += float(k['pv'])
+                    else:
+                        visa += float(k['pv'])
+            total = efectivo + visa - float(self.lineEdit.text())
+            self.lblVisadinero.setText(str(visa))
+            self.lblEfectivodinero.setText(str(efectivo))
+            self.lblTotaldinero.setText(str(total))
 
     def onChange(self,i): #changed!
         if i == 0:
             if self.List_[0]['condition'] == 'INACTIVO':
                 self.lblPrinter.setVisible(False)
+                if self.currentID_day != 0:   
+                    self.lineEdit.setEnabled(False)
             else:
                 self.lblPrinter.setVisible(True)
+                if self.currentID_day != 0:    
+                    self.lineEdit.setEnabled(True)
+            self.lineEdit.setText(str(self.cajaChica_1))
+            self.printAmount(1)
+            self.currentTab = 1
+
         elif i == 1:
             if self.List_[1]['condition'] == 'INACTIVO':
                 self.lblPrinter.setVisible(False)
             else:
                 self.lblPrinter.setVisible(True)
+                
+            self.lineEdit.setEnabled(False)
+            self.lineEdit.setText(str(self.cajaChica_2))
+            self.printAmount(2)
+            self.currentTab = 2
+
         elif i == 2:
             if self.List_[2]['condition'] == 'INACTIVO':
                 self.lblPrinter.setVisible(False)
             else:
                 self.lblPrinter.setVisible(True)
 
-    def currentDay_printer(self):
+            self.lineEdit.setEnabled(False)
+            self.lineEdit.setText(str(self.cajaChica_3))
+            self.printAmount(3)
+            self.currentTab = 3
+
+
+    def currentDay_printer(self, currentID = 0, userID = 0):
+        self.userID = userID
+        self.currentID_day = currentID
         if self.List_[0]['condition'] == 'INACTIVO':
             self.lblPrinter.setVisible(False)
+            if self.currentID_day != 0:
+                self.lineEdit.setEnabled(False)
         else:
             self.lblPrinter.setVisible(True)
+            if self.currentID_day != 0:
+                self.lineEdit.setEnabled(True)
+
+
+    # -----------  close event configuration  -----------
+    def closeEvent(self, event):
+        if self.lineEdit.text() == "":
+            print("Aqui no paso nada")
+        else:
+            try:
+                if self.currentTab == 1:
+                    CJ_chica = float(self.lineEdit.text())
+                    if float(self.cajaChica_1) != CJ_chica:
+                        self.sales_object.actualizarCajaChica(CJ_chica, self.currentID_day)
+            except:
+                ret = QMessageBox.information(self, 'Aviso', "Gasto diario invalido")
+
+    # -----------  printer function  -----------
+    def print(self, event):
+        if self.currentTab == 1 and self.List_[0]['condition'] == 'ACTIVO':
+            ret = QMessageBox.question(self, 'Genesis - [Museo del Libro]', "Desea cerrar las ventas de la pestaña activa?", QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            if ret == QMessageBox.Yes:
+                if self.sales_object.change_state(self.List_[0]['id'], self.userID): #sql
+                    self.init_condition() #sql
+                    self.lblPrinter.setVisible(False)
+                    #imprimir function
+
+        elif self.currentTab == 2 and self.List_[1]['condition'] == 'ACTIVO':
+            ret = QMessageBox.question(self, 'Genesis - [Museo del Libro]', "Desea cerrar las ventas de la pestaña activa?", QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            if ret == QMessageBox.Yes:
+                if self.sales_object.change_state(self.List_[1]['id'], self.userID): #sql
+                    self.init_condition() #sql
+                    self.lblPrinter.setVisible(False)
+                    #imprimir function
+
+        elif self.currentTab == 3 and self.List_[2]['condition'] == 'ACTIVO':
+            ret = QMessageBox.question(self, 'Genesis - [Museo del Libro]', "Desea cerrar las ventas de la pestaña activa?", QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            if ret == QMessageBox.Yes:
+                if self.sales_object.change_state(self.List_[2]['id'], self.userID): #sql #falta agregar el responsable
+                    self.init_condition() #sql
+                    self.lblPrinter.setVisible(False)
+                    #imprimir function
 
     def setupUi(self):
         self.setObjectName("selsDialog")
@@ -191,13 +550,13 @@ class Ui_selsDialog(QtWidgets.QDialog):
         self.tableWidget.setHorizontalHeaderItem(5, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(6, item)
-        self.tableWidget.setColumnWidth(0,100)
-        self.tableWidget.setColumnWidth(1,90)
+        self.tableWidget.setColumnWidth(0,70)
+        self.tableWidget.setColumnWidth(1,60)
         self.tableWidget.setColumnWidth(2,80)
         self.tableWidget.setColumnWidth(3,250)
         self.tableWidget.setColumnWidth(4,50)
-        self.tableWidget.setColumnWidth(5,75)
-        self.tableWidget.setColumnWidth(6,70)
+        self.tableWidget.setColumnWidth(5,95)
+        self.tableWidget.setColumnWidth(6,110)
         header = self.tableWidget.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Fixed)
@@ -208,6 +567,8 @@ class Ui_selsDialog(QtWidgets.QDialog):
         header.setSectionResizeMode(6, QtWidgets.QHeaderView.Fixed)
         header.setStretchLastSection(True)
         self.tableWidget.verticalHeader().hide()
+        self.tableWidget.setSelectionBehavior(1)
+        self.tableWidget.setSelectionMode(1)
 
         # -----------  qtablewidget_1  -----------
         self.tabWidget.addTab(self.tab, "")
@@ -232,13 +593,13 @@ class Ui_selsDialog(QtWidgets.QDialog):
         self.tableWidget_2.setHorizontalHeaderItem(5, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_2.setHorizontalHeaderItem(6, item)
-        self.tableWidget_2.setColumnWidth(0,100)
-        self.tableWidget_2.setColumnWidth(1,90)
+        self.tableWidget_2.setColumnWidth(0,70)
+        self.tableWidget_2.setColumnWidth(1,60)
         self.tableWidget_2.setColumnWidth(2,80)
         self.tableWidget_2.setColumnWidth(3,250)
         self.tableWidget_2.setColumnWidth(4,50)
-        self.tableWidget_2.setColumnWidth(5,75)
-        self.tableWidget_2.setColumnWidth(6,70)
+        self.tableWidget_2.setColumnWidth(5,95)
+        self.tableWidget_2.setColumnWidth(6,110)
         header = self.tableWidget_2.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Fixed)
@@ -249,6 +610,8 @@ class Ui_selsDialog(QtWidgets.QDialog):
         header.setSectionResizeMode(6, QtWidgets.QHeaderView.Fixed)
         header.setStretchLastSection(True)
         self.tableWidget_2.verticalHeader().hide()
+        self.tableWidget_2.setSelectionBehavior(1)
+        self.tableWidget_2.setSelectionMode(1)
 
         # -----------  qtablewidget_2  -----------
         self.tabWidget.addTab(self.tab_3, "")
@@ -273,13 +636,13 @@ class Ui_selsDialog(QtWidgets.QDialog):
         self.tableWidget_3.setHorizontalHeaderItem(5, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_3.setHorizontalHeaderItem(6, item)
-        self.tableWidget_3.setColumnWidth(0,100)
-        self.tableWidget_3.setColumnWidth(1,90)
+        self.tableWidget_3.setColumnWidth(0,70)
+        self.tableWidget_3.setColumnWidth(1,60)
         self.tableWidget_3.setColumnWidth(2,80)
         self.tableWidget_3.setColumnWidth(3,250)
         self.tableWidget_3.setColumnWidth(4,50)
-        self.tableWidget_3.setColumnWidth(5,75)
-        self.tableWidget_3.setColumnWidth(6,70)
+        self.tableWidget_3.setColumnWidth(5,95)
+        self.tableWidget_3.setColumnWidth(6,110)
         header = self.tableWidget_3.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Fixed)
@@ -290,6 +653,8 @@ class Ui_selsDialog(QtWidgets.QDialog):
         header.setSectionResizeMode(6, QtWidgets.QHeaderView.Fixed)
         header.setStretchLastSection(True)
         self.tableWidget_3.verticalHeader().hide()
+        self.tableWidget_3.setSelectionBehavior(1)
+        self.tableWidget_3.setSelectionMode(1)
         self.tableWidget_3.setStyleSheet("selection-background-color: rgb(0, 120, 255);selection-color: rgb(255, 255, 255);")
         self.tabWidget.addTab(self.tab_2, "")
 
@@ -396,10 +761,11 @@ class Ui_selsDialog(QtWidgets.QDialog):
         self.lblPrinter.setPixmap(QtGui.QPixmap("C:/Users/mrojasc/Desktop/ivan/Genesis/PyQT_sistema/UI/imgs/printer.png"))
         self.lblPrinter.setScaledContents(True)
         self.lblPrinter.setObjectName("lblPrinter")
+        self.lblPrinter.mousePressEvent = self.print
 
         # ----------- lbl total dinero-----------
         self.lblTotaldinero = QtWidgets.QLabel(self.frame_2)
-        self.lblTotaldinero.setGeometry(QtCore.QRect(590, 30, 111, 41))
+        self.lblTotaldinero.setGeometry(QtCore.QRect(605, 30, 111, 41))
         self.lblTotaldinero.setPalette(palette1)
         font = QtGui.QFont()
         font.setFamily("Open Sans Semibold")
@@ -423,10 +789,26 @@ class Ui_selsDialog(QtWidgets.QDialog):
         self.lblTotal.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
         self.lblTotal.setObjectName("lblTotal")
 
+
+        # -----------  lineEdit [Caja Chica]  -----------
+        self.lineEdit = QtWidgets.QLineEdit(self.frame_2)
+        self.lineEdit.setGeometry(QtCore.QRect(493, 60, 75, 22))
+        font = QtGui.QFont()
+        font.setFamily("Open Sans Semibold")
+        font.setPointSize(10)
+        font.setBold(True)
+        font.setWeight(75)
+        self.lineEdit.setFont(font)
+        self.lineEdit.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.lineEdit.setMaxLength(6)
+        self.lineEdit.setObjectName("lineEdit")
+
         self.retranslateUi()
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(self)
         self.tabWidget.blockSignals(False)
+
+        #self.run_threads()
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate

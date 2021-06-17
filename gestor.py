@@ -3,6 +3,7 @@ from objects import user
 from objects import ware_book
 from objects import libro
 from datetime import date
+from datetime import datetime
 import socket
 
 class users_gestor:
@@ -58,7 +59,7 @@ class wares:
 		self.cursor.close()
 		self.mydb.close()
 
-	def get_Abrev(self):
+	"""def get_Abrev(self):
 		self.connect_db()
 		try:
 			query = ("select * from genesisDB.wares where ip = '" + self.localIP + "';")
@@ -72,13 +73,15 @@ class wares:
 			return self.dict_['abrev']
 		except:
 			return self.dict_['abrev']
-			print("No se puede conectar a la base de datos")
+			print("No se puede conectar a la base de datos")"""
 
 
 
 class dayly_sales:
 	def __init__(self):
-		self.currentDay = str(date.today())
+		self.List1 = []
+		self.List2 = []
+		self.List3 = []
 
 	def connect_db(self):
 		self.mydb = mysql.connector.connect(host = "mysql-28407-0.cloudclusters.net", user="admin01", passwd="alayza2213", port="28416")
@@ -99,19 +102,41 @@ class dayly_sales:
 					id_ = int(id[0])
 				else:
 					id_ = int(id)
+			self.disconnect_db()
 			if id_ > 0:
-				return True 
+				return (True,id_) 
 			else:
-				return False
+				return (False,0)
 		except:
-			return False
 			print("No se puede conectar a la base de datos")
+			self.disconnect_db()
+			return (False,0)
+			
+	def update_sales(self, cod_, cantidad):
+		print(cod_)
+		print(cantidad)
+		self.connect_db()
+		try:
+			query = ("update genesisDB.ware_books set genesisDB.ware_books.cant_STC = genesisDB.ware_books.cant_STC - " + str(cantidad) + " where genesisDB.ware_books.cod_book = '" + str(cod_) + "';")
+			self.cursor.execute(query)
+			self.mydb.commit()
+			self.disconnect_db()
+			return True
+		except:
+			print("No se puede conectar a la base de datos")
+			self.disconnect_db()
+			return False
+
 
 	def insert_currentDay(self):
 		self.connect_db()
 		try:
 			query = ("insert into genesisDB.dayly_sales (date_) values ('" + str(date.today()) + " 00:00:00');")
+			query1 = ("set @ID := (select genesisDB.dayly_sales.id from genesisDB.dayly_sales order by genesisDB.dayly_sales.id desc limit 1);")
+			query2 = ("insert into genesisDB.salesDetails (id, id_sales, codBook, total) values (0, @ID, 'PST_1', 0.0);")
 			self.cursor.execute(query)
+			self.cursor.execute(query1)
+			self.cursor.execute(query2)
 			self.mydb.commit()
 			self.disconnect_db()
 			return True
@@ -142,20 +167,187 @@ class dayly_sales:
 		List_ = []
 		self.connect_db()
 		try:
-			query = ("select date_, condition_ from genesisDB.dayly_sales order by id desc limit 3;")
+			query = ("select date_, condition_, id from genesisDB.dayly_sales order by id desc limit 3;")
 			self.cursor.execute(query)
-			for (date_,condition_) in self.cursor:
-				dict_ = {"tab": self.changeNumber2Day(int(date_.weekday()),date_.strftime("%d"),condition_), 'condition': str(condition_)}
+			for (date_,condition_,id_) in self.cursor:
+				dict_ = {"tab": self.changeNumber2Day(int(date_.weekday()),date_.strftime("%d"),condition_), "condition": str(condition_), "id": int(id_)}
 				List_.append(dict_)
 			self.disconnect_db()
 			return List_
 		except:
 			print("No se puede conectar a la base de datos")
 			return List_
+
+	def change_state(self, id_, id_user = 0):
+		self.connect_db()
+		try:
+			query = ("update genesisDB.dayly_sales set genesisDB.dayly_sales.condition_ = 'INACTIVO', genesisDB.dayly_sales.employeeID = " + str(id_user) + " where genesisDB.dayly_sales.id = " + str(id_) + ";")
+			self.cursor.execute(query)
+			self.mydb.commit()
+			self.disconnect_db()
+			return True
+		except:
+			print("No se puede conectar a la base de datos")
+			self.disconnect_db()
+			return False
+
+
+	def getlastdaylyID(self, dayID): ## falta corejir esta parte
+		id_ = 0
+		self.connect_db()
+		try:
+			query = ("select id from genesisDB.salesDetails where genesisDB.salesDetails.id_sales = " + str(dayID) + " order by genesisDB.salesDetails.id asc limit 1")
+			self.cursor.execute(query)
+			for (param1) in self.cursor:
+				if type(param1) is tuple:
+					id_ = int(param1[0])
+				else:
+					id_ = int(param1)
+			self.disconnect_db()
+			if id_ >= 0:
+				return (id_ + 1)
+			else:
+				return 1
+		except:
+			print("No se puede conectar a la base de datos")
+			return 1
+		
+
+
+	def actualizarCajaChica(self, CajaChica, currentID_day):
+		self.connect_db()
+		try:
+			query = ("update genesisDB.salesDetails set genesisDB.salesDetails.total = " + str(CajaChica) + " where genesisDB.salesDetails.id = 0 and genesisDB.salesDetails.id_sales = " + str(currentID_day) + ";")
+			self.cursor.execute(query)
+			self.mydb.commit()
+			self.disconnect_db()
+			return True
+		except:
+			print("No se puede conectar a la base de datos")
+			self.disconnect_db()
+			return False
 			
 
 
+	def registrarVenta(self, dayID, userID, bookCOD, cant, credit_, receipt_, PU, title_):
+		total = float(PU) * cant
+		if credit_ == True:
+			credit__ = 1
+		else:
+			credit__ = 0
 
+		if receipt_ == True:
+			receipt__ = 1
+		else:
+			receipt__ = 0
+
+		self.connect_db()
+		try:
+			query = ("set @IV := (select genesisDB.salesDetails.id from genesisDB.salesDetails where genesisDB.salesDetails.id_sales = " + str(dayID) + " order by genesisDB.salesDetails.id desc limit 1) + 1;")
+			query1 = ("insert into genesisDB.salesDetails (id,id_sales,time_,userID,codBook,cant,credit_,receipt,total) values (@IV," + str(dayID) + ",'" + datetime.now().strftime("%H:%M:%S") + "'," + str(userID) + ",'" + str(bookCOD)+ "'," + str(cant) + "," + str(credit_) + "," + str(receipt_) + "," + str(total) +");")
+			self.cursor.execute(query)
+			self.cursor.execute(query1)
+			self.mydb.commit()
+			self.disconnect_db()
+			return True
+		except:
+			print("No se puede conectar a la base de datos")
+			return False
+
+
+	def currentSales_(self, id):
+		self.List1.clear()
+		self.connect_db()
+		query = ("select genesisDB.salesDetails.*, genesisDB.books.name from genesisDB.salesDetails inner join genesisDB.books on genesisDB.salesDetails.codBook = genesisDB.books.cod where genesisDB.salesDetails.id_sales = " + str(id) + ";")
+		try:
+			self.cursor.execute(query)
+			for (param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11) in self.cursor:
+				if int(param2) != 0:
+					pu = float(param10) / float(param7)
+					dict_ = {'id': int(param2),'hora': str(param4),'user': str(param5),'codBook': str(param6),'metodo': bool(param8),'recibo': bool(param9),'titulo':str(param11),'cant':str(param7),'pu': str(pu), 'pv': str(param10)}
+					self.List1.append(dict_)
+				else:
+					dict_ = {'id': int(param2),'hora': '00:00:00','user': '0','codBook': 'no tiene','metodo': False,'recibo': False,'titulo':'no tiene','cant': '0','pu': '0', 'pv': str(param10)}
+					self.List1.append(dict_)
+			self.disconnect_db()
+		except:
+			print("No se puede conectar a genesisDB")
+			self.disconnect_db()
+
+
+	def getLastThree(self):
+		self.List1.clear()
+		self.List2.clear()
+		self.List3.clear()
+		indexList = []
+		self.connect_db()
+		try:
+			query = ("select id from genesisDB.dayly_sales order by genesisDB.dayly_sales.id desc limit 3;")
+			self.cursor.execute(query)
+			for (id) in self.cursor:
+				if type(id) is tuple:
+					indexList.append(int(id[0]))
+				else:
+					indexList.append(int(id))
+			self.disconnect_db()
+		except:
+			print("No se puede conectar a la base de datos")
+			self.disconnect_db()
+
+		if len(indexList) > 0:
+			self.currentSales(self.List1,indexList[0])
+			self.currentSales(self.List2,indexList[1])
+			self.currentSales(self.List3,indexList[2])
+		else:
+			print("No se puede cargar index´s")
+
+	def getLastTwo(self):
+		self.List1.clear()
+		self.List2.clear()
+		self.List3.clear()
+		indexList = []
+		self.connect_db()
+		try:
+			query = ("select id from genesisDB.dayly_sales order by genesisDB.dayly_sales.id desc limit 3;")
+			self.cursor.execute(query)
+			for (id) in self.cursor:
+				if type(id) is tuple:
+					indexList.append(int(id[0]))
+				else:
+					indexList.append(int(id))
+			self.disconnect_db()
+		except:
+			print("No se puede conectar a la base de datos")
+			self.disconnect_db()
+
+		if len(indexList) > 0:
+			self.currentSales(self.List2,indexList[1])
+			self.currentSales(self.List3,indexList[2])
+		else:
+			print("No se puede cargar index´s")
+
+
+
+	def currentSales(self, List_, id):
+		self.connect_db()
+		query = ("select genesisDB.salesDetails.*, genesisDB.books.name from genesisDB.salesDetails inner join genesisDB.books on genesisDB.salesDetails.codBook = genesisDB.books.cod where id_sales = " + str(id) + ";")
+		try:
+			self.cursor.execute(query)
+			for (param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11) in self.cursor:
+				if int(param2) != 0:
+					pu = float(param10) / float(param7)
+					dict_ = {'id': int(param2),'hora': str(param4),'user': str(param5),'codBook': str(param6),'metodo': bool(param8),'recibo': bool(param9),'titulo':str(param11),'cant':str(param7),'pu': str(pu), 'pv': str(param10)}
+					List_.append(dict_)
+				elif int(param2) == 0:
+					dict_ = {'id': int(param2),'hora': '00:00:00','user': '0','codBook': 'no tiene','metodo': False,'recibo': False,'titulo':'no tiene','cant': '0','pu': '0', 'pv': str(param10)}
+					List_.append(dict_)
+			self.disconnect_db()
+		except:
+			print("No se puede conectar a genesisDB")
+			self.disconnect_db()
+
+
+		
 class ware_gestor:
 	
 	def connect_db(self):
@@ -231,7 +423,7 @@ class ware_gestor:
 				size = len(join_line)
 				join_line = join_line[:size-2]
 				join_line = (join_line + ";")
-				print(join_line)
+				#print(join_line)
 				self.cursor.execute(join_line)
 				self.mydb.commit()
 				self.disconnect_db()

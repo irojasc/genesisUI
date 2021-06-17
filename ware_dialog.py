@@ -12,6 +12,7 @@ from PyQt5.QtCore import Qt, QThread, QObject, pyqtSignal
 from PyQt5.QtGui import QFont, QBrush, QColor
 from PyQt5 import QtCore, QtGui, QtWidgets
 from gestor import ware_gestor
+from gestor import dayly_sales
 from inout_dialog import Ui_inoutDialog
 import time
 import copy
@@ -40,6 +41,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.count = 0
         self.setupUi()
         self.current_table = []
+        self.objDayly = dayly_sales() ## objeto dayly
         # state1 = ventas
         # state2 = in/out
         # -----------  se crea el obejto ingreso/egreso  -----------
@@ -107,7 +109,9 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.cmbSearch.setCurrentIndex(-1)
         self.lblAdd.setVisible(False)
 
-
+    def changeCurrentDay(self, current_Day = False, current_Id = 0):
+        self.current_Day = current_Day
+        self.current_Id = current_Id
 
     # -----------  carga tabla qtableWidget  -----------
     def loadData(self, condition = "main"):
@@ -244,40 +248,108 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     
     def vender(self):
-        condicion = [False,False]
-        ok = False
-        ret = QMessageBox.question(self, '[TIPO DE PAGO]', "VENTA: EFECTIVO(SI), VISA(NO)", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
-        if ret == QMessageBox.Yes:
-            print('LA VENTA ES EN EFECTIVO')
-            condicion = [True,False]
-        elif ret == QMessageBox.No:
-            condicion = [True,False]
-            print('LA VENTA ES CON TARJETA')
-        else:
-            condicion = [False,False]
 
-        if condicion[0]:
-            text, ok = QInputDialog.getText(self, '[CANTIDAD]', 'INGRESE CANTIDAD DEL LIBRO VENDIDO')
-            try:
-                if ok != False:
-                    value = int(text)
-                    if ok and value > 0:
-                        condicion[1] = True
-                    elif ok and value < 0:
-                        condicion[1] = False
-                        QMessageBox.information(self, "ADVERTENCIA", "EL TEXTO DEBE SER UN NUMERO POSITIVO")
+        if self.current_Day:
+            condicion = [False,False,False]
+            ok = False
+            val_ = self.tipoVenta()
+            tipoVenta = True
+            recibo = False
+            # Tipo de venta : True: venta en efectivo
+            # Tipo de venta : False: venta en visa
+            # recibo : True: venta con recibo
+            # recibo : True: venta sin recibo
+            
+            if val_ == 'Efectivo':
+                condicion[0] = True
+                tipoVenta = True
+            elif val_ == 'Visa':
+                condicion[0] = True
+                tipoVenta = False
+            elif val_ == 'Cancel':
+                condicion[0] = False
+
+
+            if condicion[0]:
+                ret = QMessageBox.question(self, 'Genesis - [Museo del Libro]', "La venta incluye boleta?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
+                if ret == QMessageBox.Yes:
+                    condicion[1] = True
+                    recibo = True
+                elif ret == QMessageBox.No:
+                    condicion[1] = True
+                    recibo = False
                 else:
                     condicion[1] = False
-            except:
-                condicion[1] = False
-                ret = QMessageBox.information(self, 'ADVERTENCIA', "CAMPO VACIO O VALOR INVALIDO")
 
-        if condicion[0] and condicion[1]:
-            print("La venta se realizo con exito")
+            
+            if condicion[0] and condicion[1]:
+                text, ok = QInputDialog.getText(self, 'Genesis - [Museo del Libro]', 'Ingrese cantidad de producto a vender?')
+                try:
+                    if ok != False:
+                        cant = int(text)
+                        if cant > 0:
+                            condicion[2] = True
+                        elif cant < 0:
+                            condicion[2] = False
+                            QMessageBox.information(self, "ADVERTENCIA", "Debe ingresar un numero positivo")
+                        elif cant == 0:
+                            condicion[2] = False
+                            QMessageBox.information(self, "ADVERTENCIA", "Debe ingresar un valor diferente de cero")
+                    else:
+                        condicion[1] = False
+                except:
+                    condicion[2] = False
+                    QMessageBox.information(self, 'ADVERTENCIA', "Campo vacio e invalido")
+
+            if condicion[0] and condicion[1] and condicion[2]:
+                
+                temp = self.ware_table.currentRow()
+                #self.current_Id = id del dia presente
+                #current_user.id = id de usuario actual
+                #self.ware_table.item(temp,0).text() = codigo de libro
+                #cant = cantidad
+                #tipoventa = efectivo/tarjeta
+                #recibo = si la venta incluye recibo o no
+                #pv = pv
+                #ultimo = nombre del libro
+                if temp >= 0:
+                    if self.objDayly.update_sales(str(self.ware_table.item(temp,0).text()),cant):
+                        bool_ = self.objDayly.registrarVenta(self.current_Id, self.current_user.id, self.ware_table.item(temp,0).text(), cant, tipoVenta, recibo, self.real_table[temp].book.Pv,self.ware_table.item(temp,2).text())
+                        ##esta parte de abajo se esta haciendo a la volada
+                        if bool_:
+                            for i in self.ware.ware_list:
+                                if i.book.cod == str(self.ware_table.item(temp,0).text()):
+                                    i.almacen_quantity[0] -= cant
+                            QMessageBox.information(self, "AVISO", "La venta se registro con exito")
+                            self.loadData()
+                        else:
+                            QMessageBox.information(self, "AVISO", "Error al registrar venta")
+                else:
+                    QMessageBox.information(self, "AVISO", "Error al registrar venta")
+                
+            else:
+                print("La venta no pudo registrarse")
         else:
-            print("Problemas en la venta")
+            QMessageBox.information(self, "AVISO", "Debe iniciar un nuevo dia de ventas")
 
 
+    def tipoVenta(self):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("INGRESE EL MODO DE VENTA")
+        msgBox.setWindowTitle("GENESIS - [MUSEO DEL LIBRO]")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        buttonY = msgBox.button(QMessageBox.Ok)
+        buttonX = msgBox.button(QMessageBox.Cancel)
+        buttonY.setText('EFECTIVO')
+        buttonX.setText('TARJETA')
+        val = msgBox.exec()
+        if val == QMessageBox.Ok:
+            return 'Efectivo'
+        elif val == QMessageBox.Cancel:
+            return 'Visa'
+        else:
+            return 'Cancel'
 
     def load_table(self, event):
         self.table = "main"
