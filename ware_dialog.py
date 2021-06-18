@@ -97,8 +97,9 @@ class Ui_Dialog(QtWidgets.QDialog):
 
 
     # -----------  condiciones iniciales al abrir ventana  -----------
-    def init_condition(self, user = None):
+    def init_condition(self, user = None, condition = 'INACTIVO'):
         # -----------  set item conditions  -----------
+        self.current_condition = condition
         self.current_user = user
         self.cmbSearch.setEnabled(True)
         self.txtSearch.setEnabled(True)
@@ -248,8 +249,7 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     
     def vender(self):
-
-        if self.current_Day:
+        if self.current_Day and self.current_condition == 'ACTIVO':
             condicion = [False,False,False]
             ok = False
             val_ = self.tipoVenta()

@@ -382,6 +382,7 @@ class Ui_selsDialog(QtWidgets.QDialog):
                     CJ_chica = float(self.lineEdit.text())
                     if float(self.cajaChica_1) != CJ_chica:
                         self.sales_object.actualizarCajaChica(CJ_chica, self.currentID_day)
+                #= self.sales_object.verify_day()
             except:
                 ret = QMessageBox.information(self, 'Aviso', "Gasto diario invalido")
 
@@ -393,6 +394,7 @@ class Ui_selsDialog(QtWidgets.QDialog):
                 if self.sales_object.change_state(self.List_[0]['id'], self.userID): #sql
                     self.init_condition() #sql
                     self.lblPrinter.setVisible(False)
+                    self.lineEdit.setEnabled(False)
                     #imprimir function
 
         elif self.currentTab == 2 and self.List_[1]['condition'] == 'ACTIVO':

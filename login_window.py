@@ -35,7 +35,7 @@ class Ui_MainWindow(object):
     def __init__(self, user = None):
         self.current_ware = wares()
         self.day_object = dayly_sales()
-        self.current_user = user # usuario que se envia a wareDialog
+        self.current_user = user # este valor de user viene desde el login
         self.current_day, self.current_Id = self.day_object.verify_day() ## sql
         
         self.sels_dialog = QDialog()
@@ -51,7 +51,7 @@ class Ui_MainWindow(object):
         if self.ui_dialog_.isVisible():
             print("Hola Mundo")
         else:
-            self.ui_dialog.init_condition(self.current_user)
+            self.ui_dialog.init_condition(self.current_user, self.ui_dialog_.List_[0]['condition'])
             self.ui_dialog.show_window()
 
 
@@ -264,13 +264,13 @@ class Ui_MainWindow(object):
             if ret == QMessageBox.Yes:
                 self.day_object.insert_currentDay()
                 self.current_day, self.current_Id = self.day_object.verify_day() # recupera el id del dia presente
-                self.ui_dialog.changeCurrentDay(True,self.current_Id) 
+                self.ui_dialog.changeCurrentDay(True,self.current_Id)
                 self.ui_dialog_.lastTwo()
             elif ret == QMessageBox.No:
                 self.ui_dialog_.lastTables()
         else:
             self.ui_dialog_.lastTwo() ## se caraga los datos de los 2 dias habiles anteriores ##sql
-            self.ui_dialog.changeCurrentDay(True,self.current_Id) 
+            self.ui_dialog.changeCurrentDay(True,self.current_Id)
 
         self.ui_dialog_.init_condition() ## esto es para cargar los nombres de los tabs
 
